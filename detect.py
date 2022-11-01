@@ -51,7 +51,7 @@ class Detect:
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode()
         topic = msg.topic
-        print(topic, self.TOPIC)
+        # print(topic, self.TOPIC)
         try:
             data = json.loads(payload)
             type = data['type']
@@ -68,6 +68,7 @@ class Detect:
             print(payload)
         
     def unsubcribe(self):
+        self.TOPIC = 'none'
         self.client.unsubscribe(self.TOPIC)
 
     def connect_mqtt(self):
@@ -79,9 +80,10 @@ class Detect:
         client.connect(self.BROKER, self.PORT)
         return client
 
-    def on_disconnect(self):
-        self.timer_online.stop()
+    def on_disconnect(self,client, userdata, rc):
+        self.timer_online._stop()
         self.on_disconnect()
+        
 
     def publish_data(self, distance):
         now = datetime.now()
