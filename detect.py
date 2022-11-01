@@ -5,19 +5,22 @@ import random
 import time
 import serial
 import serial.tools.list_ports
+import threading
 
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
 
 class Detect:
     def __init__(self):
-        self.BROKER = 'broker.emqx.io'
-        self.PORT = 8083
+        # self.BROKER = 'broker.emqx.io'
+        self.BROKER='broker.mqttdashboard.com'
+        self.PORT = 8000
         self.CLIENT_ID = "python-mqtt-ws-pub-sub-{id}".format(id=random.randint(0, 1000))
         self.USERNAME = 'emqx'
         self.PASSWORD = 'public'
         self.FLAG_CONNECTED = 0
         self.history=[]
+        self.TOPICADMIN='admin'
 
     def subcribe(self, topic):
         self.TOPIC = topic 
@@ -38,47 +41,66 @@ class Detect:
         if rc == 0:
             FLAG_CONNECTED = 1
             print("Connected to MQTT Broker!")
-            client.subscribe(self.TOPIC)
+            self.client.subscribe(self.TOPIC)
+            self.client.subscribe(self.TOPICADMIN)
+            self.public_online()
         else:
             print("Failed to connect, return code {rc}".format(rc=rc), )
 
 
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode()
+        topic = msg.topic
+        print(topic, self.TOPIC)
         try:
             data = json.loads(payload)
             type = data['type']
-            message = data['message']
-            print(type)
-            if 'once' in type:
-                self.measure(message)
-            elif 'history' in type:
-                self.send_history()
+            message = data['data']
+
+            if topic == self.TOPICADMIN:
+                if type == 'get-all-topic':
+                    self.public_topic()
+            elif topic == self.TOPIC:
+                if type == 'get-live-data':
+                    distance = message['distance']
+                    self.measure(distance)
         except:
             print(payload)
         
+    def unsubcribe(self):
+        self.client.unsubscribe(self.TOPIC)
 
     def connect_mqtt(self):
         client = mqtt_client.Client(self.CLIENT_ID, transport='websockets')
         client.username_pw_set(self.USERNAME, self.PASSWORD)
         client.on_connect = self.on_connect
         client.on_message = self.on_message
+        client.on_disconnect = self.on_disconnect
         client.connect(self.BROKER, self.PORT)
         return client
 
+    def on_disconnect(self):
+        self.timer_online.stop()
+        self.on_disconnect()
 
-    def publish(self, message):
+    def publish_data(self, distance):
         now = datetime.now()
         data = bytes("x", 'utf-8')
         self.SERIAL_PORT.write(data)
         res = self.SERIAL_PORT.readline()
         res = res.decode("utf-8").split(",")[0]
+        
         msg_dict = {
-            'dist': message,
-            'number': res,
-            'dateTime': now.strftime("%H:%M:%S")
+            'type': 'live-data',
+            'data': {
+                'distance': distance,
+                'voltage': res,
+                'time': now.strftime("%H:%M:%S")
+            }
+
         }
         msg = json.dumps(msg_dict)
+        print(msg_dict)
         result = self.client.publish(self.TOPIC, msg)
         status = result[0]
         if status == 0:
@@ -87,9 +109,27 @@ class Detect:
         else:
             print("Failed to send message to topic {topic}".format(topic=self.TOPIC))
 
+    #TODO: Not sure
     def publish_history(self):
         self.client.publish(self.TOPIC, str(self.history))
 
+    def public_topic(self):
+        msg_dict = {
+            'type': 'return-topic',
+            'topic-name': self.TOPIC
+        }
+        msg = json.dumps(msg_dict)
+        self.client.publish(self.TOPICADMIN, msg)
+
+    def public_online(self):
+        self.timer_online = threading.Timer(5.0, self.public_online)
+        self.timer_online.start()
+        msg_dict = {
+            'type': 'online',
+            'id': self.TOPIC
+        }
+        msg = json.dumps(msg_dict)
+        self.client.publish(self.TOPICADMIN, msg)
     def run(self):
         self.client = self.connect_mqtt()
         self.client.loop_start()
@@ -97,7 +137,7 @@ class Detect:
     
     def measure(self, message):
         if FLAG_CONNECTED:
-            self.publish(message)
+            self.publish_data(message)
         else:
             self.client.loop_stop()
     

@@ -81,5 +81,6 @@ class App(ctk.CTk):
                 # Change button state
                 self.btnSubcribe.configure(text="Subcribe",fg_color="#395E9C")
                 self.isSubcribe = False
+                self.detect.unsubcribe()
             except:
                 messagebox.showerror(title='Alert', message='Oops! Something\'s wrong')
