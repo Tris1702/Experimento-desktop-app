@@ -51,19 +51,25 @@ class Detect:
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode()
         topic = msg.topic
-        # print(topic, self.TOPIC)
+        print(topic, self.TOPIC)
         try:
+            print(payload)
             data = json.loads(payload)
             type = data['type']
-            message = data['data']
+            if ('data' in data):
+                message = data['data']
 
             if topic == self.TOPICADMIN:
+                print(type)
                 if type == 'get-all-topic':
                     self.public_topic()
+                
             elif topic == self.TOPIC:
                 if type == 'get-live-data':
                     distance = message['distance']
                     self.measure(distance)
+                elif type == 'get-history':
+                    self.publish_history()
         except:
             print(payload)
         
@@ -107,18 +113,26 @@ class Detect:
         status = result[0]
         if status == 0:
             print("Send {msg} to topic {topic}".format(msg=msg, topic=self.TOPIC))
-            self.history.append(msg)
+            self.history.append(msg_dict)
         else:
             print("Failed to send message to topic {topic}".format(topic=self.TOPIC))
 
     #TODO: Not sure
     def publish_history(self):
-        self.client.publish(self.TOPIC, str(self.history))
+        print("gethistory here")
+        msg_dict = {
+            'type': 'return-history',
+            'id': self.TOPIC,
+            'data': self.history
+        }
+        msg = json.dumps(msg_dict)
+        self.client.publish(self.TOPIC, msg)
 
     def public_topic(self):
+        print("getalltopic")
         msg_dict = {
             'type': 'return-topic',
-            'topic-name': self.TOPIC
+            'topicName': self.TOPIC
         }
         msg = json.dumps(msg_dict)
         self.client.publish(self.TOPICADMIN, msg)
