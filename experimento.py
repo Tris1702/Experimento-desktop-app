@@ -1,6 +1,6 @@
-from app import App
+from mainboard import MainBoard
 
 if __name__ == '__main__':
-    app = App()   
+    app = MainBoard()   
     print('loop') 
     app.mainloop()

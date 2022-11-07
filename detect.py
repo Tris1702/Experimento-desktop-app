@@ -34,6 +34,7 @@ class Detect:
         result = []
         for i in ports:
             result.append(str(i).split()[0])
+        if len(result) == 0: result = ['No COM detected']
         return result
 
     def on_connect(self, client, userdata, flags, rc):
