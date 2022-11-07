@@ -91,8 +91,7 @@ class FrameOffline:
         print('yes, i measure')
 
     def measureOnce(self):
-        # if self.detect.SERIAL_PORT == None:
-        #     print('set port')
-        #     self.detect.set_serial_port(self.cbCom.get())
-        self.detect.set_serial_port(self.cbCom.get())
+        if self.detect.SERIAL_PORT == None:
+            print('set port')
+            self.detect.set_serial_port(self.cbCom.get())
         self.detect.measure(self.entryDistance.get())
