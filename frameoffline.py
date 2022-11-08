@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from detectoffline import DetectOffline
+import matplotlib.pyplot as plt
 
 class FrameOffline:
 
@@ -78,7 +79,7 @@ class FrameOffline:
         self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Console Log', text_font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
 
-        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Draw', text_font=(self.TEXTFONT, -16), command=lambda: self.drawChart())
+        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Draw', text_font=(self.TEXTFONT, -16), command=self.drawChart)
         self.btnDrawChart.grid(row=0, column = 1, sticky='nse')
 
         self.tbLogger = ctk.CTkTextbox(master=self.frame2, corner_radius=10, state='disabled', text_font=(self.TEXTFONT, -14), height=100)
@@ -95,3 +96,14 @@ class FrameOffline:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
         self.detect.measure(self.entryDistance.get())
+    
+    def drawChart(self):
+        xValue = []
+        yValue = []
+        for value in self.detect.history:
+            xValue.append(value['distance'])
+            yValue.append(value['voltage'])
+        plt.plot(xValue, yValue,'ro-')
+        plt.xlabel('distance')
+        plt.ylabel('voltage')
+        plt.show()

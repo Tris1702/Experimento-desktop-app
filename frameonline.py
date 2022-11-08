@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from detect import Detect
 
+
 class FrameOnline:
     def __init__(self, parent):
         super().__init__
