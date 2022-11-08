@@ -98,12 +98,20 @@ class FrameOffline:
         self.detect.measure(self.entryDistance.get())
     
     def drawChart(self):
-        xValue = []
-        yValue = []
+        # xValue = [1, 2, 3, 4, 5, 6, 7, 8 , 9, 10]
+        # yValue = [0.3, 0.4, 0.6, 1.0, 1.2, 1.5, 1.7,1.9, 2.0, 2.1]
+        xValue=[]
+        yValue=[]
         for value in self.detect.history:
             xValue.append(value['distance'])
             yValue.append(value['voltage'])
+        
+        fig, ax = plt.subplots()
         plt.plot(xValue, yValue,'ro-')
         plt.xlabel('distance')
         plt.ylabel('voltage')
+        ax.set_xlim(0, 35)
+        ax.set_ylim(0, 3)
+
+        plt.grid()
         plt.show()

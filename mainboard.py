@@ -39,8 +39,11 @@ class MainBoard(ctk.CTk):
         self.frame_left.grid_rowconfigure(1, weight=0)
         self.frame_left.grid_rowconfigure(2, minsize=10)
         self.frame_left.grid_rowconfigure(3, weight=0)
+        self.frame_left.grid_rowconfigure(4, weight=1)
         self.frame_left.grid_columnconfigure(2, minsize=5)
-
+        
+        self.created_by = ctk.CTkLabel(master=self.frame_left, text="Created by @ProPTIT")
+        self.created_by.grid(row=4, column=1, sticky='sw')
 
         self.btn_option_offline = ctk.CTkButton(master=self.frame_left, text='Offline', text_font=(self.TEXTFONT, -16), fg_color='#4D4D4D',command=lambda: self.changeFrame('offline'))
         self.btn_option_offline.grid(row=1,column=1, sticky='w')
