@@ -10,10 +10,10 @@ import threading
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
 
-class Detect:
+class DetectOnline:
     def __init__(self):
-        # self.BROKER = 'broker.emqx.io'
-        self.BROKER='broker.mqttdashboard.com'
+        self.BROKER = 'broker.emqx.io'
+        # self.BROKER='broker.mqttdashboard.com'
         self.PORT = 8000
         self.CLIENT_ID = "python-mqtt-ws-pub-sub-{id}".format(id=random.randint(0, 1000))
         self.USERNAME = 'emqx'

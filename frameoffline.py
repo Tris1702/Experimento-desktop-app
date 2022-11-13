@@ -1,6 +1,10 @@
 import customtkinter as ctk
 from detectoffline import DetectOffline
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy.interpolate import CubicSpline
+from tkinter import ttk
+import math
 
 class FrameOffline:
 
@@ -65,7 +69,10 @@ class FrameOffline:
 
         #========Frame2===========
         self.frame2.grid_rowconfigure(0, weight=0)
-        self.frame2.grid_rowconfigure(1, weight=1)
+        self.frame2.grid_rowconfigure(1, minsize=10)
+        self.frame2.grid_rowconfigure(2, weight=1)
+        self.frame2.grid_rowconfigure(3, minsize=10)
+
         self.frame2.grid_columnconfigure(0, minsize=10)
         self.frame2.grid_columnconfigure(1, weight=1)
         self.frame2.grid_columnconfigure(2, minsize=10)
@@ -82,8 +89,31 @@ class FrameOffline:
         self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Draw', text_font=(self.TEXTFONT, -16), command=self.drawChart)
         self.btnDrawChart.grid(row=0, column = 1, sticky='nse')
 
-        self.tbLogger = ctk.CTkTextbox(master=self.frame2, corner_radius=10, state='disabled', text_font=(self.TEXTFONT, -14), height=100)
-        self.tbLogger.grid(row=1, column=1, pady=10, sticky='nsew')
+        styleTreeView = ttk.Style()
+        styleTreeView.theme_use('clam')
+        styleTreeView.configure("Treeview",
+            highlightthickness=0,
+            background="#D3D3D3",
+            foreground="white",
+            rowheight=25,
+            fieldbackground='#292929',
+            font=(self.TEXTFONT, -16)
+        )
+        styleTreeView.map('Treeview', background=[('selected', '#395E9C')])
+        styleTreeView.configure('Treeview.Heading', background="#395E9C", foreground='white')
+        self.tableLogger = ttk.Treeview(master=self.frame2, columns=(1,2,3), show='headings', height='10')
+        self.tableLogger.grid(row=2, column = 1, sticky='nsew')
+        
+        self.tableLogger.tag_configure('odd', background='#292929', foreground='white')
+        self.tableLogger.tag_configure('even', background='#3D3D3D', foreground='white')
+
+        self.tableLogger.column(1, stretch=False, anchor='c')
+        self.tableLogger.column(2, stretch=False, anchor='c')
+        self.tableLogger.column(3, stretch=False, anchor='c')
+
+        self.tableLogger.heading(1, text='ID')
+        self.tableLogger.heading(2, text='Distance')
+        self.tableLogger.heading(3, text='Voltage')
         
     def reloadCom(self):
         self.cbCom.configure(values=self.detect.get_coms())
@@ -96,22 +126,35 @@ class FrameOffline:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
         self.detect.measure(self.entryDistance.get())
-    
+        # for i in range (30):
+        #     if i % 2 == 0:
+        #         self.tableLogger.insert("", 0, iid=i, values=(i, 10, 12), tags='even')
+        #     else: 
+        #         self.tableLogger.insert("", 0, iid=i, values=(i, 10, 12), tags='odd')
+
+        if len(self.detect.history) %2 == 0:
+            self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['distance'],self.detect.history[-1]['voltage']), tags='even')
+        else: 
+            self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['distance'],self.detect.history[-1]['voltage']), tags='odd')
+
     def drawChart(self):
-        # xValue = [1, 2, 3, 4, 5, 6, 7, 8 , 9, 10]
-        # yValue = [0.3, 0.4, 0.6, 1.0, 1.2, 1.5, 1.7,1.9, 2.0, 2.1]
-        xValue=[]
-        yValue=[]
-        for value in self.detect.history:
-            xValue.append(value['distance'])
-            yValue.append(value['voltage'])
-        
+        xValue = np.array([0.7, 1, 4, 5, 6, 7, 8])
+        yValue = np.array([0.5, 0.63, 0.99, 0.99, 0.99, 0.99, 0.99])
+        # xValue=[]
+        # yValue=[]
+        # for value in self.detect.history:
+        #     xValue.append(value['distance'])
+        #     yValue.append(value['voltage'])
+        cs = np.polyfit(xValue, yValue, xValue.size-1)
         fig, ax = plt.subplots()
-        plt.plot(xValue, yValue,'ro-')
+        xvar = np.linspace(max(xValue), min(xValue))
+        yvar =  np.polyval(cs, xvar)
+        plt.plot(xvar, yvar,'b-', xValue, yValue, 'ro')
+        # plt.plot(xValue, f(xValue), 'bo--')
         plt.xlabel('distance')
         plt.ylabel('voltage')
-        ax.set_xlim(0, 35)
-        ax.set_ylim(0, 3)
+        # ax.set_xlim(0, 10)
+        # ax.set_ylim(0, 10)
 
         plt.grid()
         plt.show()

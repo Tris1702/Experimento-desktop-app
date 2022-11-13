@@ -1,13 +1,13 @@
 import customtkinter as ctk
-from detect import Detect
-
+from detectonline import DetectOnline
+from tkinter import messagebox
 
 class FrameOnline:
     def __init__(self, parent):
         super().__init__
         self.isSubcribe=False
         self.main_frame = ctk.CTkFrame(master=parent)
-        self.detect = Detect()
+        self.detect = DetectOnline()
         self.TEXTFONT = "Roboto Medium"
         #==========Create Frames======
         self.main_frame.grid_rowconfigure((0,1), weight=1)
@@ -50,7 +50,7 @@ class FrameOnline:
 
     def subcribeTopic(self, comName, topic):
         if self.isSubcribe == False:
-            # try:
+            try:
                 # Change button state
                 self.btnSubcribe.configure(text="Unsubcribe",fg_color="red")
 
@@ -58,8 +58,8 @@ class FrameOnline:
                 self.detect.set_serial_port(comName)
                 self.detect.subcribe(topic)
                 self.detect.run()
-            # except:
-            #     messagebox.showerror(title='Alert', message='Oops! Something\'s wrong')
+            except NameError:
+                messagebox.showerror(title='Alert', message=NameError)
         else:
             try:
                 # Change button state
