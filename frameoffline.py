@@ -5,12 +5,15 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from tkinter import ttk
 import math
+from tkinter.filedialog import asksaveasfile
+import pandas as pd
+import threading
 
 class FrameOffline:
 
     def __init__(self, parent):
         super().__init__
-
+        self.isMeasuring = False
         self.TEXTFONT = "Roboto Medium"
         self.detect = DetectOffline()
         self.main_frame = ctk.CTkFrame(master=parent)
@@ -57,10 +60,10 @@ class FrameOffline:
         self.btnMeasure.grid(row=2, column=3, sticky='nsew')
 
             #===Third line===
-        self.labelRepeat = ctk.CTkLabel(master=self.frame1, text="Repeat", text_font=(self.TEXTFONT, -16))
+        self.labelRepeat = ctk.CTkLabel(master=self.frame1, text="Interval", text_font=(self.TEXTFONT, -16))
         self.labelRepeat.grid(row=4, column=0, sticky='nsw')
 
-        self.entryRepeatTimes = ctk.CTkEntry(master=self.frame1, placeholder_text='2-10 times', text_font=(self.TEXTFONT, -16))
+        self.entryRepeatTimes = ctk.CTkEntry(master=self.frame1, placeholder_text='seconds', text_font=(self.TEXTFONT, -16))
         self.entryRepeatTimes.grid(row=4, column=1, sticky='nsew')
 
         self.btnMeasureContinuous = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Measure continuous", text_font=(self.TEXTFONT, -14), command=lambda: self.measureContinuous())
@@ -80,14 +83,19 @@ class FrameOffline:
         self.frame3 = ctk.CTkFrame(master=self.frame2)
         self.frame3.grid(row=0, column=1, sticky='nsew')
         self.frame3.grid_rowconfigure(0, weight=1)
-        self.frame3.grid_columnconfigure(0, weight=0)
-        self.frame3.grid_columnconfigure(1, weight=1)
+        self.frame3.grid_columnconfigure(0, weight=1)
+        self.frame3.grid_columnconfigure(1, weight=0)
+        self.frame3.grid_columnconfigure(2, minsize=5)
+        self.frame3.grid_columnconfigure(3, weight=0)
 
         self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Console Log', text_font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
 
         self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Draw', text_font=(self.TEXTFONT, -16), command=self.drawChart)
-        self.btnDrawChart.grid(row=0, column = 1, sticky='nse')
+        self.btnDrawChart.grid(row=0, column = 1, sticky='nsw')
+
+        self.btnExport = ctk.CTkButton(master=self.frame3, text='Export', text_font=(self.TEXTFONT, -16), command=self.exportData)
+        self.btnExport.grid(row=0, column = 3, sticky='nsw')
 
         styleTreeView = ttk.Style()
         styleTreeView.theme_use('clam')
@@ -119,18 +127,32 @@ class FrameOffline:
         self.cbCom.configure(values=self.detect.get_coms())
 
     def measureContinuous(self):
-        print('yes, i measure')
+        if self.isMeasuring == False:
+            self.isMeasuring = True
+            self.btnMeasureContinuous.configure(text="Stop",fg_color="red")
+            self.measureWithInterval(self.entryRepeatTimes.get())
+        else:
+            self.isMeasuring = False
+            self.timer_measure.cancel()
+            self.btnMeasureContinuous.configure(text="Measure continuous",fg_color="#395E9C")
+
+    def measureWithInterval(self, interval):
+        self.timer_measure = threading.Timer(int(interval), lambda: self.measureWithInterval(int(interval)))
+        self.timer_measure.start()
+        if self.detect.SERIAL_PORT == None:
+            print('set port')
+            self.detect.set_serial_port(self.cbCom.get())
+        self.detect.measure(self.entryDistance.get())
+        if len(self.detect.history) %2 == 0:
+            self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['distance'],self.detect.history[-1]['voltage']), tags='even')
+        else: 
+            self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['distance'],self.detect.history[-1]['voltage']), tags='odd')
 
     def measureOnce(self):
         if self.detect.SERIAL_PORT == None:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
         self.detect.measure(self.entryDistance.get())
-        # for i in range (30):
-        #     if i % 2 == 0:
-        #         self.tableLogger.insert("", 0, iid=i, values=(i, 10, 12), tags='even')
-        #     else: 
-        #         self.tableLogger.insert("", 0, iid=i, values=(i, 10, 12), tags='odd')
 
         if len(self.detect.history) %2 == 0:
             self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['distance'],self.detect.history[-1]['voltage']), tags='even')
@@ -138,23 +160,30 @@ class FrameOffline:
             self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['distance'],self.detect.history[-1]['voltage']), tags='odd')
 
     def drawChart(self):
-        xValue = np.array([0.7, 1, 4, 5, 6, 7, 8])
-        yValue = np.array([0.5, 0.63, 0.99, 0.99, 0.99, 0.99, 0.99])
-        # xValue=[]
-        # yValue=[]
-        # for value in self.detect.history:
-        #     xValue.append(value['distance'])
-        #     yValue.append(value['voltage'])
-        cs = np.polyfit(xValue, yValue, xValue.size-1)
+        xValue=[]
+        yValue=[]
+        for value in self.detect.history:
+            xValue.append(value['distance'])
+            yValue.append(value['voltage'])
+        cs = np.polyfit(xValue, yValue, len(xValue)-1)
         fig, ax = plt.subplots()
         xvar = np.linspace(max(xValue), min(xValue))
         yvar =  np.polyval(cs, xvar)
         plt.plot(xvar, yvar,'b-', xValue, yValue, 'ro')
-        # plt.plot(xValue, f(xValue), 'bo--')
         plt.xlabel('distance')
         plt.ylabel('voltage')
-        # ax.set_xlim(0, 10)
-        # ax.set_ylim(0, 10)
 
         plt.grid()
         plt.show()
+    
+    def exportData(self):
+        xValue=[]
+        yValue=[]
+        for value in self.detect.history:
+            xValue.append(value['distance'])
+            yValue.append(value['voltage'])
+        data = [("csv file(*.csv)","*.csv")]
+        filename = asksaveasfile(filetypes = data, defaultextension = data[0], initialfile='data.csv')
+        if filename != None:
+            df = pd.DataFrame({'distance': xValue, 'voltage': yValue})
+            df.to_csv(filename, index=True)

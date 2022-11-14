@@ -14,7 +14,8 @@ class DetectOnline:
     def __init__(self):
         self.BROKER = 'broker.emqx.io'
         # self.BROKER='broker.mqttdashboard.com'
-        self.PORT = 8000
+        # self.BROKER = 'test.mosquitto.org'
+        self.PORT = 8083
         self.CLIENT_ID = "python-mqtt-ws-pub-sub-{id}".format(id=random.randint(0, 1000))
         self.USERNAME = 'emqx'
         self.PASSWORD = 'public'
@@ -70,6 +71,7 @@ class DetectOnline:
                     distance = message['distance']
                     self.measure(distance)
                 elif type == 'get-history':
+                    print('get here')
                     self.publish_history()
         except:
             print(payload)
@@ -88,7 +90,7 @@ class DetectOnline:
         return client
 
     def on_disconnect(self,client, userdata, rc):
-        self.timer_online._stop()
+        self.timer_online.cancel()
         self.on_disconnect()
         
 
@@ -101,6 +103,7 @@ class DetectOnline:
         
         msg_dict = {
             'type': 'live-data',
+            'id': self.TOPIC,
             'data': {
                 'distance': distance,
                 'voltage': res,
@@ -120,14 +123,17 @@ class DetectOnline:
 
     #TODO: Not sure
     def publish_history(self):
-        print("gethistory here")
-        msg_dict = {
-            'type': 'return-history',
-            'id': self.TOPIC,
-            'data': self.history
-        }
-        msg = json.dumps(msg_dict)
-        self.client.publish(self.TOPIC, msg)
+        try:
+            msg_dict = {
+                'type': 'return-history',
+                'id': self.TOPIC,
+                'data': [tmp for tmp in self.history if tmp['id'] == self.TOPIC][::-1] 
+            }
+            msg = json.dumps(msg_dict)
+            self.client.publish(self.TOPIC, msg)
+            print(msg)
+        except NameError:
+            print(NameError)
 
     def public_topic(self):
         print("getalltopic")
