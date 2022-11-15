@@ -71,8 +71,10 @@ class DetectOnline:
                     distance = message['distance']
                     self.measure(distance)
                 elif type == 'get-history':
-                    print('get here')
                     self.publish_history()
+                elif type == 'delete-single-data-by-id':
+                    timeData = data['time']
+                    self.delete_data_by_id(timeData)
         except:
             print(payload)
         
@@ -164,3 +166,14 @@ class DetectOnline:
         else:
             self.client.loop_stop()
     
+    def deleteData(self, timeData):
+        self.history = [element for element in self.history if element['data']['time'] == timeData]
+        msg_dict = {
+            'type': 'delete-single-data-by-id',
+            'id': self.TOPIC,
+            'data': {
+                'time': timeData
+            }
+        }
+        msg = json.dumps(msg_dict)
+        self.client.publish(self.TOPIC, msg)
