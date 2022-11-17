@@ -10,12 +10,137 @@ import threading
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
 
-class Detect:
+import websockets
+from websocket import create_connection
+import asyncio
+
+class Detect():
     def __init__(self):
-        # self.BROKER = 'broker.emqx.io'
-        self.BROKER='broker.mqttdashboard.com'
-        self.PORT = 8000
-        self.CLIENT_ID = "python-mqtt-ws-pub-sub-{id}".format(id=random.randint(0, 1000))
+        self.CLIENT_ID = 11111
+        self.FLAG_CONNECTED = 0
+        self.history=[]
+        self.TOPIC_ADMIN='admin'
+        self.URL = "ws://192.168.1.101:4444"
+        
+    def run(self):
+        asyncio.run(self.connect())
+        
+    def set_serial_port(self, serialPortName):
+        self.SERIAL_PORT = serial.Serial(serialPortName, 9600)
+    
+    def get_coms(self):
+        print('get com')
+        ports = serial.tools.list_ports.comports()
+        result = []
+        for i in ports:
+            result.append(str(i).split()[0])
+        if len(result) == 0: result = ['No COM detected']
+        return result
+
+    async def connect(self):
+        # Connect to the server
+        global FLAG_CONNECTED
+        async with websockets.connect(self.URL) as ws:
+            FLAG_CONNECTED = 1
+            self.WEBSOCKET = ws
+
+            asyncio.run(self.sendMessage(self.TOPIC_ADMIN, 3, {})) 
+            asyncio.run(self.sendMessage(self.TOPIC, 3, {}))
+            asyncio.run(self.public_online())
+            
+            # Stay alive forever, listening to incoming msgs
+            while True:
+                payload = await ws.recv()
+                data = json.loads(payload)
+                type = data['type']
+                topic = data['topic']
+                
+                if ('data' in data):
+                    message = data['data']
+                    
+                if topic == self.TOPIC_ADMIN:
+                    print(type)
+                    if type == 'get-all-topic':
+                        self.public_topic()
+                elif topic == self.TOPIC:
+                    if type == 'get-live-data':
+                        distance = message['distance']
+                        self.measure(distance)
+                    elif type == 'get-history':
+                        self.publish_history()
+                    elif type == 'delete-single-data-by-id':
+                        timeData = data['time']
+                        self.delete_data_by_id(timeData)
+                    
+                
+    async def sendMessage(self, topic, type, payload):
+        msg_dict = {
+            'clientId': self.CLIENT_ID,
+            'topic': topic,
+            'type': type,
+            'payload': payload
+        }
+        msg = json.dumps(msg_dict)
+        await self.WEBSOCKET.send(msg)
+
+    def subcribe(self, topic):
+        self.TOPIC = topic 
+        
+    async def unsubcribe(self):
+        self.TOPIC = 'none'
+        asyncio.run(self.sendMessage(self.TOPIC, 4, {}))
+        
+    async def public_topic(self):
+        print("getalltopic")
+        payload = {
+            'type': 'return-topic',
+            'topicName': self.TOPIC
+        }
+        asyncio.run(self.sendMessage(self.TOPIC_ADMIN, 2, payload))
+        
+    async def measure(self, message):
+        if FLAG_CONNECTED:
+            asyncio.run(self.sendMessage(self.TOPIC, 2, message))
+ 
+    async def publish_history(self):
+        try:
+            payload = {
+                'type': 'return-history',
+                'id': self.TOPIC,
+                'data': [tmp for tmp in self.history if tmp['id'] == self.TOPIC][::-1] 
+            }
+            asyncio.run(self.sendMessage(self.TOPIC, 2, payload))
+        except NameError:
+            print(NameError)
+    
+    async def public_online(self):
+        self.timer_online = threading.Timer(5.0, self.public_online)
+        self.timer_online.start()
+        payload = {
+            'type': 'online',
+            'id': self.TOPIC
+        }
+        asyncio.run(self.sendMessage(self.TOPIC_ADMIN, 2, payload))
+            
+    async def delete_data_by_id(self, timeData):
+        self.history = [element for element in self.history if element['data']['time'] == timeData]
+        payload = {
+            'type': 'return-delete-single-data-by-id',
+            'id': self.TOPIC,
+            'data': {
+                'time': timeData
+            }
+        }
+        asyncio.run(self.sendMessage(self.TOPIC, 2, payload))
+    
+        
+class Detect3:
+    def __init__(self):
+        self.BROKER = 'localhost'
+        # self.BROKER='broker.mqttdashboard.com'
+        # self.BROKER = 'test.mosquitto.org'
+        self.PORT = 4444
+        self.CLIENT_ID = "111"
         self.USERNAME = 'emqx'
         self.PASSWORD = 'public'
         self.FLAG_CONNECTED = 0
@@ -34,6 +159,7 @@ class Detect:
         result = []
         for i in ports:
             result.append(str(i).split()[0])
+        if len(result) == 0: result = ['No COM detected']
         return result
 
     def on_connect(self, client, userdata, flags, rc):
@@ -70,6 +196,9 @@ class Detect:
                     self.measure(distance)
                 elif type == 'get-history':
                     self.publish_history()
+                elif type == 'delete-single-data-by-id':
+                    timeData = data['time']
+                    self.delete_data_by_id(timeData)
         except:
             print(payload)
         
@@ -87,7 +216,7 @@ class Detect:
         return client
 
     def on_disconnect(self,client, userdata, rc):
-        self.timer_online._stop()
+        self.timer_online.cancel()
         self.on_disconnect()
         
 
@@ -100,12 +229,12 @@ class Detect:
         
         msg_dict = {
             'type': 'live-data',
+            'id': self.TOPIC,
             'data': {
                 'distance': distance,
                 'voltage': res,
                 'time': now.strftime("%H:%M:%S")
             }
-
         }
         msg = json.dumps(msg_dict)
         print(msg_dict)
@@ -119,14 +248,17 @@ class Detect:
 
     #TODO: Not sure
     def publish_history(self):
-        print("gethistory here")
-        msg_dict = {
-            'type': 'return-history',
-            'id': self.TOPIC,
-            'data': self.history
-        }
-        msg = json.dumps(msg_dict)
-        self.client.publish(self.TOPIC, msg)
+        try:
+            msg_dict = {
+                'type': 'return-history',
+                'id': self.TOPIC,
+                'data': [tmp for tmp in self.history if tmp['id'] == self.TOPIC][::-1] 
+            }
+            msg = json.dumps(msg_dict)
+            self.client.publish(self.TOPIC, msg)
+            print(msg)
+        except NameError:
+            print(NameError)
 
     def public_topic(self):
         print("getalltopic")
@@ -157,3 +289,14 @@ class Detect:
         else:
             self.client.loop_stop()
     
+    def deleteData(self, timeData):
+        self.history = [element for element in self.history if element['data']['time'] == timeData]
+        msg_dict = {
+            'type': 'return-delete-single-data-by-id',
+            'id': self.TOPIC,
+            'data': {
+                'time': timeData
+            }
+        }
+        msg = json.dumps(msg_dict)
+        self.client.publish(self.TOPIC, msg)

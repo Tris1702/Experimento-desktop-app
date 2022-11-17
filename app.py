@@ -56,7 +56,7 @@ class App(ctk.CTk):
         self.labelTopic.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         self.entryTopic = ctk.CTkEntry(master=self.frame2, placeholder_text="topic/example", text_font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
         self.entryTopic.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
-        self.btnSubcribe = ctk.CTkButton(master=self.frame2, text="Subcribe", command=lambda: self.subcribeTopic(self.cbSelectCom.get(),self.entryTopic.get()), text_font=(self.TEXTFONT, -16))
+        self.btnSubcribe = ctk.CTkButton(master=self.frame2, text="Subcribe", command=lambda:  self.subcribeTopic(self.cbSelectCom.get(),self.entryTopic.get()), text_font=(self.TEXTFONT, -16))
         self.btnSubcribe.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
     def reloadCom(self):
