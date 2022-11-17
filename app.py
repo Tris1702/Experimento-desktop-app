@@ -4,13 +4,14 @@ from detect import Detect
 from tkinter import PhotoImage, messagebox
 from PIL import Image
 from PIL import ImageTk
+import asyncio
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue") 
 
 class App(ctk.CTk):
     def __init__(self):
-        super().__init__();
+        super().__init__()
         WIDTH = 600
         HEIGHT = 300
         self.TEXTFONT = "Roboto Medium"
@@ -73,7 +74,7 @@ class App(ctk.CTk):
                 self.isSubcribe = True
                 self.detect.set_serial_port(comName)
                 self.detect.subcribe(topic)
-                self.detect.run()
+                # self.detect.run()
             # except:
             #     messagebox.showerror(title='Alert', message='Oops! Something\'s wrong')
         else:
@@ -81,6 +82,6 @@ class App(ctk.CTk):
                 # Change button state
                 self.btnSubcribe.configure(text="Subcribe",fg_color="#395E9C")
                 self.isSubcribe = False
-                self.detect.unsubcribe()
+                asyncio.run(self.detect.unsubcribe())
             except:
                 messagebox.showerror(title='Alert', message='Oops! Something\'s wrong')
