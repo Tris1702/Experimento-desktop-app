@@ -3,10 +3,11 @@ import serial.tools.list_ports
 from datetime import datetime
 
 class DetectOffline:
-    def __init__(self, history):
+    def __init__(self, history, option):
         self.history=history
         self.SERIAL_PORT=None
         self.first_time = True
+        self.option = option
 
     def set_serial_port(self, serialPortName):
         self.SERIAL_PORT = serial.Serial(serialPortName, 9600, timeout=0.2)
@@ -35,11 +36,24 @@ class DetectOffline:
             res = res.decode("utf-8").split(",")[0]
         
         if distance != None and res != None:
-            msg_dict = {
-                'distance': float(distance),
-                'voltage': float(res),
-                'time': now.strftime("%H:%M:%S")
-            }
+            if self.option == 0:
+                msg_dict = {
+                    'Ampe': float(distance),
+                    'Voltage': float(res),
+                    'time': now.strftime("%H:%M:%S")
+                }
+            elif self.option == 1:
+                 msg_dict = {
+                    'Centimeter': float(distance),
+                    'Voltage': float(res),
+                    'time': now.strftime("%H:%M:%S")
+                }
+            else:
+                msg_dict = {
+                    'Time': float(distance),
+                    'Voltage': float(res),
+                    'time': now.strftime("%H:%M:%S")
+                }
             print(msg_dict)
             self.history.append(msg_dict)
 

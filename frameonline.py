@@ -24,16 +24,15 @@ class FrameOnline:
         self.labelTopic.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         self.entryTopic = ctk.CTkEntry(master=self.frame, placeholder_text="topic/example", text_font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
         self.entryTopic.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-        self.btnSubcribe = ctk.CTkButton(master=self.frame, text="Subcribe", command=lambda: self.subcribeTopic(self.cbSelectCom.get(),self.entryTopic.get()), text_font=(self.TEXTFONT, -16))
+        self.btnSubcribe = ctk.CTkButton(master=self.frame, text="Subcribe", command=lambda: self.subcribeTopic(self.entryTopic.get()), text_font=(self.TEXTFONT, -16))
         self.btnSubcribe.grid(row=2, column=0, padx=5, pady=5, sticky="new")
 
-    def subcribeTopic(self, comName, topic):
+    def subcribeTopic(self, topic):
         if self.isSubcribe == False:
             try:
                 # Change button state
                 self.btnSubcribe.configure(text="Unsubcribe",fg_color="red")
                 self.isSubcribe = True
-                self.detect.set_serial_port(comName)
                 self.detect.set_topic(topic)
                 self.detect.run()
             except NameError:
