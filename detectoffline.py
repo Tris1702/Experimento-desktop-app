@@ -1,11 +1,10 @@
 import serial
 import serial.tools.list_ports
-import threading
 from datetime import datetime
 
 class DetectOffline:
-    def __init__(self):
-        self.history=[]
+    def __init__(self, history):
+        self.history=history
         self.SERIAL_PORT=None
         self.first_time = True
 

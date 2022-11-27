@@ -11,7 +11,7 @@ from paho.mqtt import client as mqtt_client
 from datetime import datetime
 
 class DetectOnline:
-    def __init__(self):
+    def __init__(self, history):
         self.BROKER = 'broker.emqx.io'
         # self.BROKER='broker.mqttdashboard.com'
         # self.BROKER = 'test.mosquitto.org'
@@ -20,23 +20,11 @@ class DetectOnline:
         self.USERNAME = 'emqx'
         self.PASSWORD = 'public'
         self.FLAG_CONNECTED = 0
-        self.history=[]
         self.TOPICADMIN='admin'
+        self.history = history
 
-    def subcribe(self, topic):
+    def set_topic(self, topic):
         self.TOPIC = topic 
-
-    def set_serial_port(self, serialPortName):
-        self.SERIAL_PORT = serial.Serial(serialPortName, 9600)
-
-    def get_coms(self):
-        print('get com')
-        ports = serial.tools.list_ports.comports()
-        result = []
-        for i in ports:
-            result.append(str(i).split()[0])
-        if len(result) == 0: result = ['No COM detected']
-        return result
 
     def on_connect(self, client, userdata, flags, rc):
         global FLAG_CONNECTED
@@ -65,16 +53,8 @@ class DetectOnline:
                 print(type)
                 if type == 'get-all-topic':
                     self.public_topic()
-                
-            elif topic == self.TOPIC:
-                if type == 'get-live-data':
-                    distance = message['distance']
-                    self.measure(distance)
                 elif type == 'get-history':
                     self.publish_history()
-                elif type == 'delete-single-data-by-id':
-                    timeData = data['time']
-                    self.delete_data_by_id(timeData)
         except:
             print(payload)
         
@@ -96,34 +76,7 @@ class DetectOnline:
         self.on_disconnect()
         
 
-    def publish_data(self, distance):
-        now = datetime.now()
-        data = bytes("x", 'utf-8')
-        self.SERIAL_PORT.write(data)
-        res = self.SERIAL_PORT.readline()
-        res = res.decode("utf-8").split(",")[0]
-        
-        msg_dict = {
-            'type': 'live-data',
-            'id': self.TOPIC,
-            'data': {
-                'distance': distance,
-                'voltage': res,
-                'time': now.strftime("%H:%M:%S")
-            }
-
-        }
-        msg = json.dumps(msg_dict)
-        print(msg_dict)
-        result = self.client.publish(self.TOPIC, msg)
-        status = result[0]
-        if status == 0:
-            print("Send {msg} to topic {topic}".format(msg=msg, topic=self.TOPIC))
-            self.history.append(msg_dict)
-        else:
-            print("Failed to send message to topic {topic}".format(topic=self.TOPIC))
-
-    #TODO: Not sure
+    
     def publish_history(self):
         try:
             msg_dict = {
@@ -132,7 +85,7 @@ class DetectOnline:
                 'data': [tmp for tmp in self.history if tmp['id'] == self.TOPIC][::-1] 
             }
             msg = json.dumps(msg_dict)
-            self.client.publish(self.TOPIC, msg)
+            self.client.publish(self.TOPICADMIN, msg)
             print(msg)
         except NameError:
             print(NameError)
@@ -155,25 +108,20 @@ class DetectOnline:
         }
         msg = json.dumps(msg_dict)
         self.client.publish(self.TOPICADMIN, msg)
+
     def run(self):
         self.client = self.connect_mqtt()
         self.client.loop_start()
         time.sleep(1)
     
-    def measure(self, message):
-        if FLAG_CONNECTED:
-            self.publish_data(message)
-        else:
-            self.client.loop_stop()
-    
-    def deleteData(self, timeData):
-        self.history = [element for element in self.history if element['data']['time'] == timeData]
-        msg_dict = {
-            'type': 'delete-single-data-by-id',
-            'id': self.TOPIC,
-            'data': {
-                'time': timeData
-            }
-        }
-        msg = json.dumps(msg_dict)
-        self.client.publish(self.TOPIC, msg)
+    # def deleteData(self, timeData):
+    #     self.history = [element for element in self.history if element['data']['time'] == timeData]
+    #     msg_dict = {
+    #         'type': 'delete-single-data-by-id',
+    #         'id': self.TOPIC,
+    #         'data': {
+    #             'time': timeData
+    #         }
+    #     }
+    #     msg = json.dumps(msg_dict)
+    #     self.client.publish(self.TOPIC, msg)

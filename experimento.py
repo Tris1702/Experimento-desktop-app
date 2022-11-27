@@ -1,6 +1,6 @@
-from mainboard import MainBoard
+from dashboard import Dashboard
 
 if __name__ == '__main__':
-    app = MainBoard()   
+    app = Dashboard()   
     print('loop') 
     app.mainloop()
