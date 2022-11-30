@@ -4,7 +4,7 @@ from frameonline import FrameOnline
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue") 
-
+global HISTORY
 class Dashboard(ctk.CTk):
     def __init__(self):
         super().__init__();
@@ -21,7 +21,6 @@ class Dashboard(ctk.CTk):
         self.geometry('%dx%d+%d+%d' % (WIDTH, HEIGHT, x, y))
         self.title("Experimento")
         self.minsize(WIDTH, HEIGHT)
-        self.history = []
 
         #============== Create Frame ==========
         self.grid_rowconfigure(0, weight=1)
@@ -34,11 +33,11 @@ class Dashboard(ctk.CTk):
 
         #==============FRAME LEFT================
 
-        self.frame_left = FrameOffline(parent=self, history = self.history).main_frame
+        self.frame_left = FrameOffline(parent=self).main_frame
         self.frame_left.grid(row=0, column=0, padx=5, pady=5, sticky='nsew')
 
         #==============FRAME RIGHT===============
 
-        self.frame_right = FrameOnline(parent=self, history = self.history).main_frame
+        self.frame_right = FrameOnline(parent=self).main_frame
         self.frame_right.grid(row=0, column=1, padx=5, pady=5, sticky='nsew')
         

@@ -3,11 +3,11 @@ from detectonline import DetectOnline
 from tkinter import messagebox
 
 class FrameOnline:
-    def __init__(self, parent, history):
+    def __init__(self, parent):
         super().__init__
         self.isSubcribe=False
         self.main_frame = ctk.CTkFrame(master=parent)
-        self.detect = DetectOnline(history)
+        self.detect = DetectOnline()
         self.TEXTFONT = "Roboto Medium"
         #==========Create Frames======
         self.main_frame.grid_rowconfigure(0, weight=1)

@@ -8,14 +8,15 @@ import math
 from tkinter.filedialog import asksaveasfile
 import pandas as pd
 import threading
+from constance import Constance
 
 class FrameOffline:
-    def __init__(self, parent, history):
+    def __init__(self, parent):
         super().__init__
         self.isMeasuring = False
         self.TEXTFONT = "Roboto Medium"
         self.optionMeasure = 0
-        self.detect = DetectOffline(history, option= self.optionMeasure)
+        self.detect = DetectOffline(option= self.optionMeasure)
         self.main_frame = ctk.CTkFrame(master=parent)
         self.main_frame.grid_rowconfigure(0, weight=0)
         self.main_frame.grid_rowconfigure(1, weight=1)
@@ -76,6 +77,8 @@ class FrameOffline:
         self.frame3.grid_columnconfigure(1, weight=0)
         self.frame3.grid_columnconfigure(2, minsize=5)
         self.frame3.grid_columnconfigure(3, weight=0)
+        self.frame3.grid_columnconfigure(4, minsize=5)
+        self.frame3.grid_columnconfigure(5, weight=0)
 
         self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Console Log', text_font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
@@ -85,6 +88,9 @@ class FrameOffline:
 
         self.btnExport = ctk.CTkButton(master=self.frame3, text='Export', text_font=(self.TEXTFONT, -16), command=self.exportData)
         self.btnExport.grid(row=0, column = 3, sticky='nsw')
+
+        self.btnExport = ctk.CTkButton(master=self.frame3, text='Clear', text_font=(self.TEXTFONT, -16), command=self.clearData)
+        self.btnExport.grid(row=0, column = 5, sticky='nsw')
 
         styleTreeView = ttk.Style()
         styleTreeView.theme_use('clam')
@@ -119,80 +125,70 @@ class FrameOffline:
         if self.isMeasuring == False:
             self.isMeasuring = True
             self.btnMeasure.configure(text="Stop",fg_color="red")
-            self.measureWithInterval(self.entryValue.get())
+            self.measureWithInterval(self.entryValue.get(), timer = 0)
         else:
             self.isMeasuring = False
             self.timer_measure.cancel()
             self.btnMeasure.configure(text="Measure",fg_color="#395E9C")
 
-    def measureWithInterval(self, interval):
-        self.timer_measure = threading.Timer(int(interval), lambda: self.measureWithInterval(int(interval)))
+    def measureWithInterval(self, interval, timer):
+        
+        self.timer_measure = threading.Timer(int(interval), lambda: self.measureWithInterval(int(interval), timer+int(interval)))
         self.timer_measure.start()
+        
         if self.detect.SERIAL_PORT == None:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
-        self.detect.measure(self.entryValue.get())
-        if len(self.detect.history) %2 == 0:
-            if self.optionMeasure == 0:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Ampe'],self.detect.history[-1]['Voltage']), tags='even')
-            elif self.optionMeasure == 1:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Centimeter'],self.detect.history[-1]['Voltage']), tags='even')
-            else:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Time'],self.detect.history[-1]['Voltage']), tags='even')
-        else: 
-            if self.optionMeasure == 0:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Ampe'],self.detect.history[-1]['Voltage']), tags='odd')
-            elif self.optionMeasure == 1:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Centimeter'],self.detect.history[-1]['Voltage']), tags='odd')
-            else:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Time'],self.detect.history[-1]['Voltage']), tags='odd')
+        self.detect.measure(self.entryValue.get(), timer)
+        if self.optionMeasure == 0:
+            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['Ampe'],Constance.historyAV[-1]['Voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
+        elif self.optionMeasure == 1:
+            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['Centimeter'],Constance.historyCV[-1]['Voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+        else:
+            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['Time'],Constance.historyTV[-1]['Voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
     def measureOnce(self):
         if self.detect.SERIAL_PORT == None:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
         self.detect.measure(self.entryValue.get())
 
-        if len(self.detect.history) %2 == 0:
-            if self.optionMeasure == 0:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Ampe'],self.detect.history[-1]['Voltage']), tags='even')
-            elif self.optionMeasure == 1:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Centimeter'],self.detect.history[-1]['Voltage']), tags='even')
-            else:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Time'],self.detect.history[-1]['Voltage']), tags='even')
-        else: 
-            if self.optionMeasure == 0:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Ampe'],self.detect.history[-1]['Voltage']), tags='odd')
-            elif self.optionMeasure == 1:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Centimeter'],self.detect.history[-1]['Voltage']), tags='odd')
-            else:
-                self.tableLogger.insert("", 0, iid=len(self.detect.history), values=(len(self.detect.history),self.detect.history[-1]['Time'],self.detect.history[-1]['Voltage']), tags='odd')
+        if self.optionMeasure == 0:
+            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['Ampe'],Constance.historyAV[-1]['Voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
+        elif self.optionMeasure == 1:
+            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['Centimeter'],Constance.historyCV[-1]['Voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+        else:
+            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['Time'],Constance.historyTV[-1]['Voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+    
 
     def drawChart(self, option):
         xValue=[]
         yValue=[]
-        for value in self.detect.history:
-            if self.optionMeasure == 0:
+        if self.optionMeasure == 0:
+            for value in Constance.historyAV:
                 yValue.append(value['Voltage'])
                 xValue.append(value['Ampe'])
-            elif self.optionMeasure == 1:
+            plt.xlabel('Ampe')
+            plt.ylabel('Voltage')
+        elif self.optionMeasure == 1:
+            for value in Constance.historyCV:
                 yValue.append(value['Voltage'])
                 xValue.append(value['Centimeter'])
-            else:
+            plt.xlabel('Centimeter')
+            plt.ylabel('Voltage')
+        else:
+            for value in Constance.historyTV:
                 yValue.append(value['Voltage'])
                 xValue.append(value['Time'])
+            plt.xlabel('Time')
+            plt.ylabel('Voltage')
         plt.plot(xValue, yValue, 'ro-')
-        # if self.optionMeasure == 2:
-            #something here
-        plt.xlabel('distance')
-        plt.ylabel('voltage')
-
         plt.grid()
         plt.show()
     
     def exportData(self):
         xValue=[]
         yValue=[]
-        for value in self.detect.history:
+        for value in Constance.history:
             if self.optionMeasure == 0:
                 yValue.append(value['Voltage'])
                 xValue.append(value['Ampe'])
@@ -205,8 +201,15 @@ class FrameOffline:
         data = [("xlsx file(*.xlsx)","*.xlsx")]
         filename = asksaveasfile(filetypes = data, defaultextension = data[0], initialfile='data.xlsx')
         if filename != None:
-            df = pd.DataFrame({'distance': xValue, 'voltage': yValue})
-            df.to_excel(filename, index=True)
+            data = [("xlsx file(*.xlsx)","*.xlsx")]
+            if self.optionMeasure == 0:
+                df = pd.DataFrame({'Voltage': yValue, 'Ampe': xValue})
+            elif self.optionMeasure == 1:
+                df = pd.DataFrame({'Voltage': yValue, 'Centimeter': xValue})
+            else:
+                df = pd.DataFrame({'Voltage': yValue, 'Time': xValue})
+            xlwriter = pd.ExcelWriter(filename)
+            df.to_excel(xlwriter, index=True)
 
     def changeOptionMeasure(self, option):
         if option == "V-A":
@@ -216,6 +219,7 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Ampe')
             self.tableLogger.heading(3, text='Voltage')
+            self.clearData()
 
         elif option == "V-cm":
             self.optionMeasure = 1
@@ -224,6 +228,7 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Centimeter')
             self.tableLogger.heading(3, text='Voltage')
+            self.clearData()
 
         else:
             self.optionMeasure = 2
@@ -232,3 +237,14 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Time')
             self.tableLogger.heading(3, text='Voltage')
+            self.clearData()
+    
+    def clearData(self):
+        if self.optionMeasure == 0:
+            Constance.historyAV = []
+        elif self.optionMeasure == 1:
+            Constance.historyCV = []
+        else:
+            Constance.historyTV = []
+        for item in self.tableLogger.get_children():
+            self.tableLogger.delete(item)

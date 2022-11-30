@@ -6,22 +6,22 @@ import time
 import serial
 import serial.tools.list_ports
 import threading
+from constance import Constance
 
 from paho.mqtt import client as mqtt_client
 from datetime import datetime
 
 class DetectOnline:
-    def __init__(self, history):
+    def __init__(self):
         self.BROKER = 'broker.emqx.io'
         # self.BROKER='broker.mqttdashboard.com'
         # self.BROKER = 'test.mosquitto.org'
-        self.PORT = 8083
+        self.PORT = 8084
         self.CLIENT_ID = "python-mqtt-ws-pub-sub-{id}".format(id=random.randint(0, 1000))
         self.USERNAME = 'emqx'
         self.PASSWORD = 'public'
         self.FLAG_CONNECTED = 0
         self.TOPICADMIN='admin'
-        self.history = history
 
     def set_topic(self, topic):
         self.TOPIC = topic 
@@ -53,8 +53,10 @@ class DetectOnline:
                 print(type)
                 if type == 'get-all-topic':
                     self.public_topic()
-                elif type == 'get-history':
-                    self.publish_history()
+            else:
+                if type == 'get-history':
+                    message = data['message']
+                    self.publish_history(message)
         except:
             print(payload)
         
@@ -68,6 +70,7 @@ class DetectOnline:
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_disconnect = self.on_disconnect
+        client.tls_set()
         client.connect(self.BROKER, self.PORT)
         return client
 
@@ -77,15 +80,30 @@ class DetectOnline:
         
 
     
-    def publish_history(self):
+    def publish_history(self, message):
+        print(Constance.history)
+        msg_dict = {}
         try:
-            msg_dict = {
-                'type': 'return-history',
-                'id': self.TOPIC,
-                'data': [tmp for tmp in self.history if tmp['id'] == self.TOPIC][::-1] 
-            }
+            if message == 'AV':
+                msg_dict = {
+                    'type': 'return-history',
+                    'id': self.TOPIC,
+                    'data': Constance.historyAV[::-1] 
+                }
+            elif message == 'CV':
+                msg_dict = {
+                    'type': 'return-history',
+                    'id': self.TOPIC,
+                    'data': Constance.historyCV[::-1] 
+                }
+            else:
+                msg_dict = {
+                    'type': 'return-history',
+                    'id': self.TOPIC,
+                    'data': Constance.historyTV[::-1] 
+                }
             msg = json.dumps(msg_dict)
-            self.client.publish(self.TOPICADMIN, msg)
+            self.client.publish(self.TOPIC, msg)
             print(msg)
         except NameError:
             print(NameError)
