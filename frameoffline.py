@@ -181,7 +181,10 @@ class FrameOffline:
                 xValue.append(value['Time'])
             plt.xlabel('Time')
             plt.ylabel('Voltage')
-        plt.plot(xValue, yValue, 'ro-')
+        cs = np.polyfit(xValue, yValue, len(xValue)-1)
+        xvar = np.linspace(max(xValue), min(xValue))
+        yvar =  np.polyval(cs, xvar)
+        plt.plot(xvar, yvar,'b--', xValue, yValue, 'ro-')
         plt.grid()
         plt.show()
     
