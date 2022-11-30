@@ -166,10 +166,9 @@ class FrameOffline:
             xValue.append(value['distance'])
             yValue.append(value['voltage'])
         cs = np.polyfit(xValue, yValue, len(xValue)-1)
-        fig, ax = plt.subplots()
         xvar = np.linspace(max(xValue), min(xValue))
         yvar =  np.polyval(cs, xvar)
-        plt.plot(xvar, yvar,'b-', xValue, yValue, 'ro')
+        plt.plot(xvar, yvar,'b--', xValue, yValue, 'ro-')
         plt.xlabel('distance')
         plt.ylabel('voltage')
 

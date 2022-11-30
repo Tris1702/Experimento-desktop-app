@@ -52,10 +52,6 @@ class MainBoard(ctk.CTk):
         self.btn_option_offline.grid(row=1,column=1, sticky='w')
         self.btn_option_online = ctk.CTkButton(master=self.frame_left, text='Online', text_font=(self.TEXTFONT, -16),fg_color='#4D4D4D' ,command=lambda: self.changeFrame('online'))
         self.btn_option_online.grid(row=3, column=1, sticky='w')
-        self.btn_option_measure_AV = ctk.CTkRadioButton(master=self.frame_left, text='A-V')
-        self.btn_option_measure_AV.grid(row=5, column=1, sticky='w')
-        self.btn_option_measure_cmV = ctk.CTkRadioButton(master=self.frame_left, text='cm-V')
-        self.btn_option_measure_cmV.grid(row=7, column=1, sticky='w')
         
 
     def changeFrame(self, option):
