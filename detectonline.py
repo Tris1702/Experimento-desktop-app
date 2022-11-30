@@ -74,7 +74,7 @@ class DetectOnline:
                     self.publish_history()
                 elif type == 'delete-single-data-by-id':
                     timeData = data['time']
-                    self.delete_data_by_id(timeData)
+                    self.deleteData(timeData)
         except:
             print(payload)
         
@@ -167,7 +167,7 @@ class DetectOnline:
             self.client.loop_stop()
     
     def deleteData(self, timeData):
-        self.history = [element for element in self.history if element['data']['time'] == timeData]
+        self.history = [element for element in self.history if element['data']['time'] != timeData]
         msg_dict = {
             'type': 'delete-single-data-by-id',
             'id': self.TOPIC,
