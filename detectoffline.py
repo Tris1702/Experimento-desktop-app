@@ -38,22 +38,22 @@ class DetectOffline:
         if distance != None and res != None:
             if self.option == 0:
                 msg_dict = {
-                    'Ampe': float(distance),
-                    'Voltage': float(res),
+                    'ampe': float(distance),
+                    'voltage': float(res),
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyAV.append(msg_dict)
             elif self.option == 1:
                 msg_dict = {
-                    'Centimeter': float(distance),
-                    'Voltage': float(res),
+                    'centimeter': float(distance),
+                    'voltage': float(res),
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyCV.append(msg_dict)
             else:
                 msg_dict = {
-                    'Time': timer,
-                    'Voltage': float(res),
+                    'time': timer,
+                    'voltage': float(res),
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyTV.append(msg_dict)

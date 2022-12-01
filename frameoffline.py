@@ -141,11 +141,11 @@ class FrameOffline:
             self.detect.set_serial_port(self.cbCom.get())
         self.detect.measure(self.entryValue.get(), timer)
         if self.optionMeasure == 0:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['Ampe'],Constance.historyAV[-1]['Voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
         elif self.optionMeasure == 1:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['Centimeter'],Constance.historyCV[-1]['Voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
         else:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['Time'],Constance.historyTV[-1]['Voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['time'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
     def measureOnce(self):
         if self.detect.SERIAL_PORT == None:
             print('set port')
@@ -153,11 +153,11 @@ class FrameOffline:
         self.detect.measure(self.entryValue.get())
 
         if self.optionMeasure == 0:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['Ampe'],Constance.historyAV[-1]['Voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
         elif self.optionMeasure == 1:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['Centimeter'],Constance.historyCV[-1]['Voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
         else:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['Time'],Constance.historyTV[-1]['Voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['time'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
     
 
     def drawChart(self, option):
@@ -165,20 +165,20 @@ class FrameOffline:
         yValue=[]
         if self.optionMeasure == 0:
             for value in Constance.historyAV:
-                yValue.append(value['Voltage'])
-                xValue.append(value['Ampe'])
+                yValue.append(value['voltage'])
+                xValue.append(value['ampe'])
             plt.xlabel('Ampe')
             plt.ylabel('Voltage')
         elif self.optionMeasure == 1:
             for value in Constance.historyCV:
-                yValue.append(value['Voltage'])
-                xValue.append(value['Centimeter'])
+                yValue.append(value['voltage'])
+                xValue.append(value['centimeter'])
             plt.xlabel('Centimeter')
             plt.ylabel('Voltage')
         else:
             for value in Constance.historyTV:
-                yValue.append(value['Voltage'])
-                xValue.append(value['Time'])
+                yValue.append(value['voltage'])
+                xValue.append(value['time'])
             plt.xlabel('Time')
             plt.ylabel('Voltage')
         cs = np.polyfit(xValue, yValue, len(xValue)-1)
@@ -193,14 +193,14 @@ class FrameOffline:
         yValue=[]
         for value in Constance.history:
             if self.optionMeasure == 0:
-                yValue.append(value['Voltage'])
-                xValue.append(value['Ampe'])
+                yValue.append(value['voltage'])
+                xValue.append(value['ampe'])
             elif self.optionMeasure == 1:
-                yValue.append(value['Voltage'])
-                xValue.append(value['Centimeter'])
+                yValue.append(value['voltage'])
+                xValue.append(value['centimeter'])
             else:
-                yValue.append(value['Voltage'])
-                xValue.append(value['Time'])
+                yValue.append(value['voltage'])
+                xValue.append(value['time'])
         data = [("xlsx file(*.xlsx)","*.xlsx")]
         filename = asksaveasfile(filetypes = data, defaultextension = data[0], initialfile='data.xlsx')
         if filename != None:

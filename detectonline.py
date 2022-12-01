@@ -86,18 +86,21 @@ class DetectOnline:
         try:
             if message == 'AV':
                 msg_dict = {
+                    'data-type': 'AV',
                     'type': 'return-history',
                     'id': self.TOPIC,
                     'data': Constance.historyAV[::-1] 
                 }
             elif message == 'CV':
                 msg_dict = {
+                    'data-type': 'CV',
                     'type': 'return-history',
                     'id': self.TOPIC,
                     'data': Constance.historyCV[::-1] 
                 }
             else:
                 msg_dict = {
+                    'data-type': 'TV',
                     'type': 'return-history',
                     'id': self.TOPIC,
                     'data': Constance.historyTV[::-1] 
