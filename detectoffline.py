@@ -52,7 +52,7 @@ class DetectOffline:
                 Constance.historyCV.append(msg_dict)
             else:
                 msg_dict = {
-                    'time': timer,
+                    'timepoint': timer,
                     'voltage': float(res),
                     'time': now.strftime("%H:%M:%S")
                 }

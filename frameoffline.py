@@ -145,7 +145,7 @@ class FrameOffline:
         elif self.optionMeasure == 1:
             self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
         else:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['time'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
     def measureOnce(self):
         if self.detect.SERIAL_PORT == None:
             print('set port')
@@ -157,7 +157,7 @@ class FrameOffline:
         elif self.optionMeasure == 1:
             self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
         else:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['time'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
     
 
     def drawChart(self, option):
@@ -178,7 +178,7 @@ class FrameOffline:
         else:
             for value in Constance.historyTV:
                 yValue.append(value['voltage'])
-                xValue.append(value['time'])
+                xValue.append(value['timepoint'])
             plt.xlabel('Time')
             plt.ylabel('Voltage')
         cs = np.polyfit(xValue, yValue, len(xValue)-1)
@@ -200,19 +200,18 @@ class FrameOffline:
                 xValue.append(value['centimeter'])
             else:
                 yValue.append(value['voltage'])
-                xValue.append(value['time'])
-        data = [("xlsx file(*.xlsx)","*.xlsx")]
-        filename = asksaveasfile(filetypes = data, defaultextension = data[0], initialfile='data.xlsx')
+                xValue.append(value['timepoint'])
+        data = [("csv file(*.csv)","*.csv")]
+        filename = asksaveasfile(filetypes = data, defaultextension = data[0], initialfile='data.csv')
         if filename != None:
-            data = [("xlsx file(*.xlsx)","*.xlsx")]
+            data = [("csv file(*.csv)","*.csv")]
             if self.optionMeasure == 0:
                 df = pd.DataFrame({'Voltage': yValue, 'Ampe': xValue})
             elif self.optionMeasure == 1:
                 df = pd.DataFrame({'Voltage': yValue, 'Centimeter': xValue})
             else:
                 df = pd.DataFrame({'Voltage': yValue, 'Time': xValue})
-            xlwriter = pd.ExcelWriter(filename)
-            df.to_excel(xlwriter, index=True)
+            df.to_csv(filename, index=True)
 
     def changeOptionMeasure(self, option):
         if option == "V-A":
