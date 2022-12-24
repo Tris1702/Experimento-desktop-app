@@ -41,23 +41,23 @@ class FrameOffline:
         self.frame1.grid_columnconfigure(3, weight=0)
         
             #===First line===
-        self.labelCom = ctk.CTkLabel(master=self.frame1, text="COM", text_font=(self.TEXTFONT, -16))
+        self.labelCom = ctk.CTkLabel(master=self.frame1, text="Cổng kết nối", text_font=(self.TEXTFONT, -16))
         self.labelCom.grid(row=0, column=0, sticky='nsw')
 
         self.cbCom = ctk.CTkComboBox(master=self.frame1, values =self.detect.get_coms(), text_font=(self.TEXTFONT, -16))
         self.cbCom.grid(row=0, column=1, sticky='nsew')
 
-        self.btnRefreshCom = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Refresh", text_font=(self.TEXTFONT, -14), command=lambda: self.reloadCom())
+        self.btnRefreshCom = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Cập nhật", text_font=(self.TEXTFONT, -14), command=lambda: self.reloadCom())
         self.btnRefreshCom.grid(row=0, column=3, sticky='nsew')
 
             #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-A", "V-cm", "V-t"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["A-V", "V-cm", "V-t"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
         self.entryValue = ctk.CTkEntry(master=self.frame1, text_font=(self.TEXTFONT, -16))
         self.entryValue.grid(row=2, column=1, sticky='nsew')
 
-        self.btnMeasure = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Measure", text_font=(self.TEXTFONT, -14), command=self.measureOnce)
+        self.btnMeasure = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Đo", text_font=(self.TEXTFONT, -14), command=self.measureOnce)
         self.btnMeasure.grid(row=2, column=3, sticky='nsew')
 
         #========Frame2===========
@@ -79,18 +79,23 @@ class FrameOffline:
         self.frame3.grid_columnconfigure(3, weight=0)
         self.frame3.grid_columnconfigure(4, minsize=5)
         self.frame3.grid_columnconfigure(5, weight=0)
+        self.frame3.grid_columnconfigure(6, minsize=5)
+        self.frame3.grid_columnconfigure(8, weight=0)
 
-        self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Console Log', text_font=(self.TEXTFONT, -16))
+        self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Kết quả', text_font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
 
-        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Draw', text_font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure))
+        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Vẽ', text_font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure))
         self.btnDrawChart.grid(row=0, column = 1, sticky='nsw')
 
-        self.btnExport = ctk.CTkButton(master=self.frame3, text='Export', text_font=(self.TEXTFONT, -16), command=self.exportData)
+        self.btnExport = ctk.CTkButton(master=self.frame3, text='Xuất file', text_font=(self.TEXTFONT, -16), command=self.exportData)
         self.btnExport.grid(row=0, column = 3, sticky='nsw')
 
-        self.btnExport = ctk.CTkButton(master=self.frame3, text='Clear', text_font=(self.TEXTFONT, -16), command=self.clearData)
-        self.btnExport.grid(row=0, column = 5, sticky='nsw')
+        self.btnIP = ctk.CTkButton(master=self.frame3, text="Nội suy", text_font=(self.TEXTFONT, -16), command=self.drawInterpolation)
+        self.btnIP.grid(row=0, column=5, sticky='nsw')
+
+        self.btnExport = ctk.CTkButton(master=self.frame3, text='Xóa dữ liệu', text_font=(self.TEXTFONT, -16), command=self.clearData)
+        self.btnExport.grid(row=0, column = 8, sticky='nsw')
 
         styleTreeView = ttk.Style()
         styleTreeView.theme_use('clam')
@@ -115,8 +120,8 @@ class FrameOffline:
         self.tableLogger.column(3, stretch=False, anchor='c')
 
         self.tableLogger.heading(1, text='ID')
-        self.tableLogger.heading(2, text='Ampe')
-        self.tableLogger.heading(3, text='Voltage')
+        self.tableLogger.heading(2, text='Voltage')
+        self.tableLogger.heading(3, text='Ampe')
         
     def reloadCom(self):
         self.cbCom.configure(values=self.detect.get_coms())
@@ -124,12 +129,12 @@ class FrameOffline:
     def measureContinuous(self):
         if self.isMeasuring == False:
             self.isMeasuring = True
-            self.btnMeasure.configure(text="Stop",fg_color="red")
+            self.btnMeasure.configure(text="Ngừng",fg_color="red")
             self.measureWithInterval(self.entryValue.get(), timer = 0)
         else:
             self.isMeasuring = False
             self.timer_measure.cancel()
-            self.btnMeasure.configure(text="Measure",fg_color="#395E9C")
+            self.btnMeasure.configure(text="Đo",fg_color="#395E9C")
 
     def measureWithInterval(self, interval, timer):
         
@@ -165,8 +170,8 @@ class FrameOffline:
         yValue=[]
         if self.optionMeasure == 0:
             for value in Constance.historyAV:
-                yValue.append(value['voltage'])
-                xValue.append(value['ampe'])
+                xValue.append(value['voltage'])
+                yValue.append(value['ampe'])
             plt.xlabel('Ampe')
             plt.ylabel('Voltage')
         elif self.optionMeasure == 1:
@@ -250,3 +255,19 @@ class FrameOffline:
             Constance.historyTV = []
         for item in self.tableLogger.get_children():
             self.tableLogger.delete(item)
+
+    def drawInterpolation(self):
+        if self.optionMeasure == 2:
+            xValue=[]
+            yValue=[]
+            for value in Constance.historyTV:
+                yValue.append(value['voltage'])
+                xValue.append(value['timepoint'])
+            plt.xlabel('Time')
+            plt.ylabel('Voltage')
+            cs = np.polyfit(xValue, yValue, len(xValue)-1)
+            xvar = np.linspace(max(xValue), min(xValue))
+            yvar =  np.polyval(cs, xvar)
+            plt.plot(xvar, yvar,'b--', xValue, yValue, 'ro-')
+            plt.grid()
+            plt.show()

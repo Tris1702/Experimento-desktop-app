@@ -20,18 +20,18 @@ class FrameOnline:
         #==========Frame ============
         self.frame.grid_rowconfigure((0,1,2), weight=1)
         self.frame.grid_columnconfigure(0, weight=1)
-        self.labelTopic = ctk.CTkLabel(master=self.frame, text="Topic MQTT", text_font=(self.TEXTFONT, -16))
+        self.labelTopic = ctk.CTkLabel(master=self.frame, text="Tên đăng nhập", text_font=(self.TEXTFONT, -16))
         self.labelTopic.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         self.entryTopic = ctk.CTkEntry(master=self.frame, placeholder_text="topic/example", text_font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
         self.entryTopic.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-        self.btnSubcribe = ctk.CTkButton(master=self.frame, text="Subcribe", command=lambda: self.subcribeTopic(self.entryTopic.get()), text_font=(self.TEXTFONT, -16))
+        self.btnSubcribe = ctk.CTkButton(master=self.frame, text="Đăng nhập", command=lambda: self.subcribeTopic(self.entryTopic.get()), text_font=(self.TEXTFONT, -16))
         self.btnSubcribe.grid(row=2, column=0, padx=5, pady=5, sticky="new")
 
     def subcribeTopic(self, topic):
         if self.isSubcribe == False:
             try:
                 # Change button state
-                self.btnSubcribe.configure(text="Unsubcribe",fg_color="red")
+                self.btnSubcribe.configure(text="Đăng xuất",fg_color="red")
                 self.isSubcribe = True
                 self.detect.set_topic(topic)
                 self.detect.run()
@@ -40,7 +40,7 @@ class FrameOnline:
         else:
             try:
                 # Change button state
-                self.btnSubcribe.configure(text="Subcribe",fg_color="#395E9C")
+                self.btnSubcribe.configure(text="Đăng nhập",fg_color="#395E9C")
                 self.isSubcribe = False
                 self.detect.unsubcribe()
             except NameError:
