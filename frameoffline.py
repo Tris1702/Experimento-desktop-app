@@ -9,6 +9,7 @@ from tkinter.filedialog import asksaveasfile
 import pandas as pd
 import threading
 from constance import Constance
+import xlsxwriter
 
 class FrameOffline:
     def __init__(self, parent):
@@ -85,17 +86,16 @@ class FrameOffline:
         self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Kết quả', text_font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
 
-        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Vẽ', text_font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure))
+        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Vẽ', text_font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure, self.btnIP.get()))
         self.btnDrawChart.grid(row=0, column = 1, sticky='nsw')
 
         self.btnExport = ctk.CTkButton(master=self.frame3, text='Xuất file', text_font=(self.TEXTFONT, -16), command=self.exportData)
         self.btnExport.grid(row=0, column = 3, sticky='nsw')
 
-        self.btnIP = ctk.CTkButton(master=self.frame3, text="Nội suy", text_font=(self.TEXTFONT, -16), command=self.drawInterpolation)
-        self.btnIP.grid(row=0, column=5, sticky='nsw')
+        self.btnIP = ctk.CTkSwitch(master=self.frame3, text="Nội suy", text_font=(self.TEXTFONT, -16), onvalue="on", offvalue="off", command=None)
 
         self.btnExport = ctk.CTkButton(master=self.frame3, text='Xóa dữ liệu', text_font=(self.TEXTFONT, -16), command=self.clearData)
-        self.btnExport.grid(row=0, column = 8, sticky='nsw')
+        self.btnExport.grid(row=0, column = 5, sticky='nsw')
 
         styleTreeView = ttk.Style()
         styleTreeView.theme_use('clam')
@@ -165,15 +165,15 @@ class FrameOffline:
             self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
     
 
-    def drawChart(self, option):
+    def drawChart(self, option, drawIP):
         xValue=[]
         yValue=[]
         if self.optionMeasure == 0:
             for value in Constance.historyAV:
-                xValue.append(value['voltage'])
-                yValue.append(value['ampe'])
-            plt.xlabel('Ampe')
-            plt.ylabel('Voltage')
+                yValue.append(value['voltage'])
+                xValue.append(value['ampe'])
+            plt.xlabel('Voltage')
+            plt.ylabel('Ampe')
         elif self.optionMeasure == 1:
             for value in Constance.historyCV:
                 yValue.append(value['voltage'])
@@ -186,47 +186,66 @@ class FrameOffline:
                 xValue.append(value['timepoint'])
             plt.xlabel('Time')
             plt.ylabel('Voltage')
-        cs = np.polyfit(xValue, yValue, len(xValue)-1)
-        xvar = np.linspace(max(xValue), min(xValue))
-        yvar =  np.polyval(cs, xvar)
-        plt.plot(xvar, yvar,'b--', xValue, yValue, 'ro-')
+        if drawIP == "on":
+            cs = np.polyfit(xValue, yValue, len(xValue)-1)
+            xvar = np.linspace(max(xValue), min(xValue))
+            yvar =  np.polyval(cs, xvar)
+            plt.plot(xvar, yvar,'b--', xValue, yValue, 'ro-')
+        else:
+            plt.plot(xValue, yValue, 'ro-')
         plt.grid()
         plt.show()
     
     def exportData(self):
         xValue=[]
         yValue=[]
-        for value in Constance.history:
-            if self.optionMeasure == 0:
-                yValue.append(value['voltage'])
-                xValue.append(value['ampe'])
-            elif self.optionMeasure == 1:
+        if self.optionMeasure == 0:
+            for value in Constance.historyAV:
+                yValue.append(value['ampe'])
+                xValue.append(value['voltage'])
+        elif self.optionMeasure == 1:
+            for value in Constance.historyCV:
                 yValue.append(value['voltage'])
                 xValue.append(value['centimeter'])
-            else:
+        else:
+            for value in Constance.historyTV:
                 yValue.append(value['voltage'])
                 xValue.append(value['timepoint'])
-        data = [("csv file(*.csv)","*.csv")]
-        filename = asksaveasfile(filetypes = data, defaultextension = data[0], initialfile='data.csv')
+        filename = asksaveasfile(defaultextension ='.xlsx', initialfile='data.xlsx')
         if filename != None:
-            data = [("csv file(*.csv)","*.csv")]
+            workbook = xlsxwriter.Workbook(filename.name)
+            worksheet = workbook.add_worksheet()
             if self.optionMeasure == 0:
-                df = pd.DataFrame({'Voltage': yValue, 'Ampe': xValue})
+                worksheet.write(0, 0, 'STT')
+                worksheet.write(0, 1, 'Voltage')
+                worksheet.write(0, 2, 'Ampe')
             elif self.optionMeasure == 1:
-                df = pd.DataFrame({'Voltage': yValue, 'Centimeter': xValue})
+                worksheet.write(0, 0, 'STT')
+                worksheet.write(0, 1, 'Voltage')
+                worksheet.write(0, 2, 'Centimeter')
             else:
                 df = pd.DataFrame({'Voltage': yValue, 'Time': xValue})
-            df.to_csv(filename, index=True)
+                worksheet.write(0, 0, 'STT')
+                worksheet.write(0, 1, 'Voltage')
+                worksheet.write(0, 2, 'TimePoint')
+
+            for row in range (1, len(xValue)+1):
+                worksheet.write(row, 0, row)
+                worksheet.write(row, 1, yValue[row-1])
+                worksheet.write(row, 2, xValue[row-1])
+
+            workbook.close()
 
     def changeOptionMeasure(self, option):
-        if option == "V-A":
+        if option == "A-V":
             self.optionMeasure = 0
             self.btnMeasure.configure(command=lambda: self.measureOnce())
             self.detect.option = 0
             self.tableLogger.heading(1, text='ID')
-            self.tableLogger.heading(2, text='Ampe')
-            self.tableLogger.heading(3, text='Voltage')
+            self.tableLogger.heading(2, text='Voltage')
+            self.tableLogger.heading(3, text='Ampe')
             self.clearData()
+            self.btnIP.grid_forget()
 
         elif option == "V-cm":
             self.optionMeasure = 1
@@ -236,6 +255,7 @@ class FrameOffline:
             self.tableLogger.heading(2, text='Centimeter')
             self.tableLogger.heading(3, text='Voltage')
             self.clearData()
+            self.btnIP.grid_forget()
 
         else:
             self.optionMeasure = 2
@@ -244,6 +264,7 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Time')
             self.tableLogger.heading(3, text='Voltage')
+            self.btnIP.grid(row=0, column=8, sticky='nsw')
             self.clearData()
     
     def clearData(self):
@@ -255,19 +276,3 @@ class FrameOffline:
             Constance.historyTV = []
         for item in self.tableLogger.get_children():
             self.tableLogger.delete(item)
-
-    def drawInterpolation(self):
-        if self.optionMeasure == 2:
-            xValue=[]
-            yValue=[]
-            for value in Constance.historyTV:
-                yValue.append(value['voltage'])
-                xValue.append(value['timepoint'])
-            plt.xlabel('Time')
-            plt.ylabel('Voltage')
-            cs = np.polyfit(xValue, yValue, len(xValue)-1)
-            xvar = np.linspace(max(xValue), min(xValue))
-            yvar =  np.polyval(cs, xvar)
-            plt.plot(xvar, yvar,'b--', xValue, yValue, 'ro-')
-            plt.grid()
-            plt.show()

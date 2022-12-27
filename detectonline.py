@@ -21,7 +21,10 @@ class DetectOnline:
         self.USERNAME = 'emqx'
         self.PASSWORD = 'public'
         self.FLAG_CONNECTED = 0
-        self.TOPICADMIN='admin'
+        # self.TOPICADMIN='admin'
+
+    def set_admin_topic(self, adminTopic):
+        self.TOPICADMIN = adminTopic
 
     def set_topic(self, topic):
         self.TOPIC = topic 
@@ -89,21 +92,21 @@ class DetectOnline:
                     'data-type': 'AV',
                     'type': 'return-history',
                     'id': self.TOPIC,
-                    'data': Constance.historyAV[::-1] 
+                    'data': Constance.historyAV
                 }
             elif message == 'CV':
                 msg_dict = {
                     'data-type': 'CV',
                     'type': 'return-history',
                     'id': self.TOPIC,
-                    'data': Constance.historyCV[::-1] 
+                    'data': Constance.historyCV
                 }
             else:
                 msg_dict = {
                     'data-type': 'TV',
                     'type': 'return-history',
                     'id': self.TOPIC,
-                    'data': Constance.historyTV[::-1] 
+                    'data': Constance.historyTV
                 }
             msg = json.dumps(msg_dict)
             self.client.publish(self.TOPIC, msg)

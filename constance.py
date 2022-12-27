@@ -3,3 +3,4 @@ class Constance:
     historyAV = []
     historyCV = []
     historyTV = []
+    root = None
