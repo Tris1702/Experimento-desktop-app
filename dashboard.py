@@ -19,7 +19,7 @@ class Dashboard(ctk.CTk):
         y = (screen_height/2) - (HEIGHT/2)
 
         self.geometry('%dx%d+%d+%d' % (WIDTH, HEIGHT, x, y))
-        self.title("Experimento")
+        self.title("Thí nghiệm Vật lý - VL01")
         self.minsize(WIDTH, HEIGHT)
 
         #============== Create Frame ==========
