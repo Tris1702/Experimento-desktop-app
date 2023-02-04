@@ -8,12 +8,11 @@ import math
 from tkinter.filedialog import asksaveasfile
 import pandas as pd
 import threading
-from constance import Constance
+from config.constance import Constance
 import xlsxwriter
 
 class FrameOffline:
     def __init__(self, parent):
-        super().__init__
         self.isMeasuring = False
         self.TEXTFONT = "Roboto Medium"
         self.optionMeasure = 0
@@ -40,7 +39,7 @@ class FrameOffline:
         self.frame1.grid_columnconfigure(1, weight=1)
         self.frame1.grid_columnconfigure(2, minsize=10)
         self.frame1.grid_columnconfigure(3, weight=0)
-        
+
             #===First line===
         self.labelCom = ctk.CTkLabel(master=self.frame1, text="Cổng kết nối", text_font=(self.TEXTFONT, -16))
         self.labelCom.grid(row=0, column=0, sticky='nsw')
@@ -111,7 +110,7 @@ class FrameOffline:
         styleTreeView.configure('Treeview.Heading', background="#395E9C", foreground='white')
         self.tableLogger = ttk.Treeview(master=self.frame2, columns=(1,2,3), show='headings', height='10')
         self.tableLogger.grid(row=2, column = 1, sticky='nsew')
-        
+
         self.tableLogger.tag_configure('odd', background='#292929', foreground='white')
         self.tableLogger.tag_configure('even', background='#3D3D3D', foreground='white')
 
@@ -122,7 +121,7 @@ class FrameOffline:
         self.tableLogger.heading(1, text='ID')
         self.tableLogger.heading(2, text='Voltage')
         self.tableLogger.heading(3, text='Ampe')
-        
+
     def reloadCom(self):
         self.cbCom.configure(values=self.detect.get_coms())
 
@@ -137,10 +136,10 @@ class FrameOffline:
             self.btnMeasure.configure(text="Đo",fg_color="#395E9C")
 
     def measureWithInterval(self, interval, timer):
-        
+
         self.timer_measure = threading.Timer(int(interval), lambda: self.measureWithInterval(int(interval), timer+int(interval)))
         self.timer_measure.start()
-        
+
         if self.detect.SERIAL_PORT == None:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
@@ -163,7 +162,7 @@ class FrameOffline:
             self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
         else:
             self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
-    
+
 
     def drawChart(self, option, drawIP):
         xValue=[]
@@ -195,7 +194,7 @@ class FrameOffline:
             plt.plot(xValue, yValue, 'ro-')
         plt.grid()
         plt.show()
-    
+
     def exportData(self):
         xValue=[]
         yValue=[]
@@ -266,7 +265,7 @@ class FrameOffline:
             self.tableLogger.heading(3, text='Voltage')
             self.btnIP.grid(row=0, column=8, sticky='nsw')
             self.clearData()
-    
+
     def clearData(self):
         if self.optionMeasure == 0:
             Constance.historyAV = []

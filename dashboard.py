@@ -7,7 +7,7 @@ ctk.set_default_color_theme("dark-blue")
 global HISTORY
 class Dashboard(ctk.CTk):
     def __init__(self):
-        super().__init__();
+        super().__init__()
         WIDTH = 1000
         HEIGHT = 600
         self.TEXTFONT = "Roboto Medium"
