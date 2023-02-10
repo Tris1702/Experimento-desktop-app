@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import CubicSpline
 from tkinter import ttk
-import math
 from tkinter.filedialog import asksaveasfile
 import pandas as pd
 import threading
 from constance import Constance
+from tkinter import messagebox
 import xlsxwriter
 
 class FrameOffline:
@@ -17,6 +17,7 @@ class FrameOffline:
         self.isMeasuring = False
         self.TEXTFONT = "Roboto Medium"
         self.optionMeasure = 0
+        self.whichPort = 0
         self.detect = DetectOffline(option= self.optionMeasure)
         self.main_frame = ctk.CTkFrame(master=parent)
         self.main_frame.grid_rowconfigure(0, weight=0)
@@ -52,11 +53,14 @@ class FrameOffline:
         self.btnRefreshCom.grid(row=0, column=3, sticky='nsew')
 
             #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["A-V", "V-cm", "V-t"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["A-V", "V-cm", "V-t", "V1-I2"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
-        self.entryValue = ctk.CTkEntry(master=self.frame1, text_font=(self.TEXTFONT, -16))
+        self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị  cường độ dòng điện (A)", text_font=(self.TEXTFONT, -16))
         self.entryValue.grid(row=2, column=1, sticky='nsew')
+
+        self.cbWhichPort = ctk.CTkComboBox(master=self.frame1, values=["Cổng 1", "Cổng 2"], text_font=(self.TEXTFONT, -16), command=self.changePortMeasure)
+        self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
 
         self.btnMeasure = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Đo", text_font=(self.TEXTFONT, -14), command=self.measureOnce)
         self.btnMeasure.grid(row=2, column=3, sticky='nsew')
@@ -144,26 +148,41 @@ class FrameOffline:
         if self.detect.SERIAL_PORT == None:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
-        self.detect.measure(self.entryValue.get(), timer)
-        if self.optionMeasure == 0:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
-        elif self.optionMeasure == 1:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
-        else:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+        try:
+            self.detect.measure(float(self.entryValue.get()), timer, port=self.whichPort)
+            if self.optionMeasure == 0:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
+            elif self.optionMeasure == 1:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+            else:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+        except:
+            messagebox.showerror(title='Alert', message="Yêu cầu điền thông tin đầy đủ")
     def measureOnce(self):
         if self.detect.SERIAL_PORT == None:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
-        self.detect.measure(self.entryValue.get())
+        try:
+            self.detect.measure(float(self.entryValue.get()), port=self.whichPort)
 
-        if self.optionMeasure == 0:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
-        elif self.optionMeasure == 1:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
-        else:
-            self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
-    
+            if self.optionMeasure == 0:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
+            elif self.optionMeasure == 1:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+            else:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+        except:
+            messagebox.showerror(title='Alert', message="Yêu cầu điền thông tin đầy đủ")
+
+    def measureV1A2(self):
+        if self.detect.SERIAL_PORT == None:
+            print('set port')
+            self.detect.set_serial_port(self.cbCom.get())
+        try:
+            self.detect.measure(float(self.entryValue.get()), Rvalue=float(self.entryValue.get()))
+            self.tableLogger.insert("", 0, iid=len(Constance.historyA2V1), values=(len(Constance.historyA2V1),Constance.historyA2V1[-1]['voltage1'],Constance.historyA2V1[-1]['ampe2']), tags='odd' if len(Constance.historyA2V1)%2 else 'even')
+        except:
+            messagebox.showerror(title='Alert', message="Yêu cầu điền thông tin đầy đủ")
 
     def drawChart(self, option, drawIP):
         xValue=[]
@@ -180,13 +199,20 @@ class FrameOffline:
                 xValue.append(value['centimeter'])
             plt.xlabel('Centimeter')
             plt.ylabel('Voltage')
-        else:
+        elif self.optionMeasure == 2:
             for value in Constance.historyTV:
                 yValue.append(value['voltage'])
                 xValue.append(value['timepoint'])
             plt.xlabel('Time')
             plt.ylabel('Voltage')
-        if drawIP == "on":
+        else:
+            for value in Constance.historyA2V1:
+                xValue.append(value['ampe2'])
+                yValue.append(value['voltage1'])
+            plt.ylabel('Voltage 1')
+            plt.xlabel('Ampe 2')
+        
+        if drawIP == "on" and self.optionMeasure == 2:
             cs = np.polyfit(xValue, yValue, len(xValue)-1)
             xvar = np.linspace(max(xValue), min(xValue))
             yvar =  np.polyval(cs, xvar)
@@ -207,10 +233,15 @@ class FrameOffline:
             for value in Constance.historyCV:
                 yValue.append(value['voltage'])
                 xValue.append(value['centimeter'])
-        else:
+        elif self.optionMeasure == 2:
             for value in Constance.historyTV:
                 yValue.append(value['voltage'])
                 xValue.append(value['timepoint'])
+        else:
+            for value in Constance.historyA2V1:
+                yValue.append(value['voltage1'])
+                xValue.append(value['ampe2'])
+
         filename = asksaveasfile(defaultextension ='.xlsx', initialfile='data.xlsx')
         if filename != None:
             workbook = xlsxwriter.Workbook(filename.name)
@@ -223,11 +254,14 @@ class FrameOffline:
                 worksheet.write(0, 0, 'STT')
                 worksheet.write(0, 1, 'Voltage')
                 worksheet.write(0, 2, 'Centimeter')
-            else:
-                df = pd.DataFrame({'Voltage': yValue, 'Time': xValue})
+            elif self.optionMeasure == 2:
                 worksheet.write(0, 0, 'STT')
                 worksheet.write(0, 1, 'Voltage')
                 worksheet.write(0, 2, 'TimePoint')
+            else:
+                worksheet.write(0, 0, 'STT')
+                worksheet.write(0, 1, 'Voltage 1')
+                worksheet.write(0, 2, 'Ampe 2')
 
             for row in range (1, len(xValue)+1):
                 worksheet.write(row, 0, row)
@@ -245,6 +279,7 @@ class FrameOffline:
             self.tableLogger.heading(2, text='Voltage')
             self.tableLogger.heading(3, text='Ampe')
             self.clearData()
+            self.entryValue.configure(placeholder_text="Giá trị  cường độ dòng điện (A)")
             self.btnIP.grid_forget()
 
         elif option == "V-cm":
@@ -254,25 +289,46 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Centimeter')
             self.tableLogger.heading(3, text='Voltage')
+            self.entryValue.configure(placeholder_text="Giá trị khoảng cách (cm)")
             self.clearData()
             self.btnIP.grid_forget()
 
-        else:
+        elif option == "V-t":
             self.optionMeasure = 2
             self.btnMeasure.configure(command=lambda: self.measureContinuous())
             self.detect.option = 2
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Time')
             self.tableLogger.heading(3, text='Voltage')
+            self.entryValue.configure(placeholder_text="Giá trị thời gian lặp")
             self.btnIP.grid(row=0, column=8, sticky='nsw')
             self.clearData()
+        else:
+            self.optionMeasure = 3
+            self.btnMeasure.configure(command=lambda: self.measureV1A2())
+            self.detect.option = 3
+            self.tableLogger.heading(1, text='ID')
+            self.tableLogger.heading(2, text='Voltage 1')
+            self.tableLogger.heading(3, text='Ampe 2')
+            self.clearData()
+            self.btnIP.grid_forget()
+            self.entryValue.configure(placeholder_text="Giá trị R")
+            self.cbWhichPort.grid_forget()
     
     def clearData(self):
         if self.optionMeasure == 0:
             Constance.historyAV = []
         elif self.optionMeasure == 1:
             Constance.historyCV = []
-        else:
+        elif self.optionMeasure == 2:
             Constance.historyTV = []
+        else:
+            Constance.historyA2V1 = []
         for item in self.tableLogger.get_children():
             self.tableLogger.delete(item)
+
+    def changePortMeasure(self, option):
+        if option == "Cổng 1":
+            self.whichPort = 0
+        elif option == "Cổng 2":
+            self.whichPort = 1
