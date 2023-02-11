@@ -64,8 +64,8 @@ class DetectOnline:
             print(payload)
         
     def unsubcribe(self):
-        self.TOPIC = 'none'
         self.client.unsubscribe(self.TOPIC)
+        self.TOPIC = 'none'
 
     def connect_mqtt(self):
         client = mqtt_client.Client(self.CLIENT_ID, transport='websockets')
@@ -101,18 +101,25 @@ class DetectOnline:
                     'id': self.TOPIC,
                     'data': Constance.historyCV
                 }
-            else:
+            elif message == 'TV':
                 msg_dict = {
                     'data-type': 'TV',
                     'type': 'return-history',
                     'id': self.TOPIC,
                     'data': Constance.historyTV
                 }
+            else:
+                msg_dict = {
+                    'data-type': 'A2V1',
+                    'type': 'return-history',
+                    'id': self.TOPIC,
+                    'data': Constance.historyA2V1
+                }
             msg = json.dumps(msg_dict)
             self.client.publish(self.TOPIC, msg)
             print(msg)
-        except NameError:
-            print(NameError)
+        except:
+            print("Loi")
 
     def public_topic(self):
         print("getalltopic")

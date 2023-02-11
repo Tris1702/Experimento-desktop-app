@@ -39,13 +39,13 @@ class FrameOnline:
                 self.detect.set_topic(topic)
                 self.detect.set_admin_topic(adminTopic)
                 self.detect.run()
-            except NameError:
-                messagebox.showerror(title='Alert', message=NameError)
+            except:
+                messagebox.showerror(title='Alert', message="Không để trống thông tin")
         else:
             try:
                 # Change button state
                 self.btnSubcribe.configure(text="Đăng nhập",fg_color="#395E9C")
                 self.isSubcribe = False
                 self.detect.unsubcribe()
-            except NameError:
-                print(NameError)
+            except:
+                messagebox.showerror(title='Alert', message="Không để trống thông tin")
