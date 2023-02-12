@@ -281,6 +281,7 @@ class FrameOffline:
             self.clearData()
             self.entryValue.configure(placeholder_text="Giá trị  cường độ dòng điện (A)")
             self.btnIP.grid_forget()
+            self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
 
         elif option == "V-cm":
             self.optionMeasure = 1
@@ -292,6 +293,7 @@ class FrameOffline:
             self.entryValue.configure(placeholder_text="Giá trị khoảng cách (cm)")
             self.clearData()
             self.btnIP.grid_forget()
+            self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
 
         elif option == "V-t":
             self.optionMeasure = 2
@@ -303,6 +305,7 @@ class FrameOffline:
             self.entryValue.configure(placeholder_text="Giá trị thời gian lặp")
             self.btnIP.grid(row=0, column=8, sticky='nsw')
             self.clearData()
+            self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
         else:
             self.optionMeasure = 3
             self.btnMeasure.configure(command=lambda: self.measureV1A2())
