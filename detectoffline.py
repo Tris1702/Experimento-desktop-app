@@ -2,6 +2,7 @@ import serial
 import serial.tools.list_ports
 from datetime import datetime
 from constance import Constance
+import re
 
 class DetectOffline:
     def __init__(self, option):
@@ -53,22 +54,61 @@ class DetectOffline:
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyCV.append(msg_dict)
-            elif self.option == 2:
+            elif self.option == 2 and distance != -1:
                 msg_dict = {
                     'timepoint': timer,
                     'voltage': float(res),
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyTV.append(msg_dict)
-            else:
+            elif self.option == 3:
                 msg_dict = {
                     'ampe2': round(float(res[1])/Rvalue, 2),
                     'voltage1': float(res[0]),
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyA2V1.append(msg_dict)
+            else:
+                try:
+                    print(Constance.formulaIP1[4:])
+                    R1value = float(Constance.formulaIP1[4:])
+                    operator1 = Constance.formulaIP1[3:4]
+
+                    R2value = float(Constance.formulaIP2[4:])
+                    operator2 = Constance.formulaIP2[3:4]
+
+                    ampe1 = None
+                    ampe2 = None
+
+                    print(res[0])
+                    if operator1 == '/':
+                        ampe1 = round(float(res[0])/R1value, int(Constance.decimalPlacesIP1))
+                    elif operator1 == '*':
+                        ampe1 = round(float(res[0])*R1value, int(Constance.decimalPlacesIP1))
+                    elif operator1 == '+':
+                        ampe1 = round(float(res[0])+R1value, int(Constance.decimalPlacesIP1))
+                    elif operator1 == '-':
+                        ampe1 = round(float(res[0])-R1value, int(Constance.decimalPlacesIP1))
+                        
+                    if operator2 == '/':
+                        ampe2 = round(float(res[1])/R2value, int(Constance.decimalPlacesIP2))
+                    elif operator2 == '*':
+                        ampe2 = round(float(res[1])*R2value, int(Constance.decimalPlacesIP2))
+                    elif operator2 == '+':
+                        ampe2 = round(float(res[1])+R2value, int(Constance.decimalPlacesIP2))
+                    elif operator2 == '-':
+                        ampe2 = round(float(res[1])-R2value, int(Constance.decimalPlacesIP2))
+                    if ampe1 != None and ampe2 != None:
+                        msg_dict = {
+                            'ampe2': ampe2,
+                            'ampe1': ampe1,
+                            'time': now.strftime("%H:%M:%S")
+                        }
+                        Constance.historyI1I2.append(msg_dict)
+                except:
+                    return
             print(msg_dict)
             Constance.history.append(msg_dict)
 
-    def measure(self, distance, timer = None, port=None, Rvalue=None):
+    def measure(self, distance = 0, timer = None, port=None, Rvalue=None):
         self.add_data(distance, timer, port, Rvalue)

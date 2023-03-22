@@ -108,12 +108,19 @@ class DetectOnline:
                     'id': self.TOPIC,
                     'data': Constance.historyTV
                 }
-            else:
+            elif message == 'A2V1':
                 msg_dict = {
                     'data-type': 'A2V1',
                     'type': 'return-history',
                     'id': self.TOPIC,
                     'data': Constance.historyA2V1
+                }
+            else:
+                msg_dict = {
+                    'data-type': 'I2I1',
+                    'type': 'return-history',
+                    'id': self.TOPIC,
+                    'data': Constance.historyI1I2
                 }
             msg = json.dumps(msg_dict)
             self.client.publish(self.TOPIC, msg)
