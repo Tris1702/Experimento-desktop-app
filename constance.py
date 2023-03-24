@@ -1,5 +1,6 @@
 class Constance:
     history = []
+    historyTVV = []
     historyAV = [
         # {
         #     'ampe': 1,
@@ -113,18 +114,18 @@ class Constance:
     isManualRecord = True
     intervalTime = 0.1
     
-    formulaIP1 = None
-    symbolIP1 = "I1"
+    formulaIP1 = "IP1/1.0"
+    symbolIP1 = "U1"
     fromValueIP1 = 0
     toValueIP1 = 30
+    unitIP1 = ""
     decimalPlacesIP1 = 2
 
-    formulaIP2 = None
+    formulaIP2 = "IP2/1.0"
     symbolIP2 = "I2"
     fromValueIP2 = 0
     toValueIP2 = 30
+    unitIP2 = ""
     decimalPlacesIP2 = 2
 
     ind = []
-
-    indexSeparate = 0

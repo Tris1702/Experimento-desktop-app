@@ -108,12 +108,19 @@ class DetectOnline:
                     'id': self.TOPIC,
                     'data': Constance.historyTV
                 }
+            elif message == 'TVV':
+                msg_dict = {
+                    'data-type': 'TVV',
+                    'type': 'return-history',
+                    'id': self.TOPIC,
+                    'data': Constance.historyTVV
+                }
             elif message == 'A2V1':
                 msg_dict = {
                     'data-type': 'A2V1',
                     'type': 'return-history',
                     'id': self.TOPIC,
-                    'data': Constance.historyA2V1
+                    'data': Constance.historyI1I2
                 }
             else:
                 msg_dict = {

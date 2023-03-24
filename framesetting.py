@@ -23,9 +23,9 @@ class FrameSetting():
 
         self.txtSetting = ctk.CTkLabel(master=self.insideFrame, text="Cài đặt", text_font=(self.TEXTFONT, -16))
         self.txtSetting.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        self.btnSettingRecord = ctk.CTkButton(master=self.insideFrame, text="Kiểu đo", command=self.openSettingRecordType)
+        self.btnSettingRecord = ctk.CTkButton(master=self.insideFrame, text="Kiểu đo", command=self.openSettingRecordType,text_font=(self.TEXTFONT, -16))
         self.btnSettingRecord.grid(row=1, column=0, padx=5, pady=5, sticky="new")
-        self.btnSettingInputs = ctk.CTkButton(master=self.insideFrame, text="Cài đặt đầu đo", command=self.openSettingInputs)
+        self.btnSettingInputs = ctk.CTkButton(master=self.insideFrame, text="Cài đặt đầu đo", command=self.openSettingInputs,text_font=(self.TEXTFONT, -16))
         self.btnSettingInputs.grid(row=2, column=0, padx=5, pady=5, sticky="new")
 
     def openSettingRecordType(self):

@@ -8,7 +8,7 @@ class RecordSetting(ctk.CTkToplevel):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.TEXTFONT = "Roboto Medium"
         self.isManual = None
         WIDTH = 400
         HEIGHT = 200
@@ -35,19 +35,19 @@ class RecordSetting(ctk.CTkToplevel):
         self.radioGroupFrame.grid_rowconfigure(0, weight=1)
         self.radioGroupFrame.grid_columnconfigure((0,1), weight=1)
 
-        self.btnSave = ctk.CTkButton(master=self, text="Lưu", command=self.saveChange)
+        self.btnSave = ctk.CTkButton(master=self, text="Lưu", command=self.saveChange,text_font=(self.TEXTFONT, -16))
         self.btnSave.grid(row=2, column=0)
         #======================Radio Frame==========================
-        self.radioManual = ctk.CTkRadioButton(master=self.radioGroupFrame, text="Thủ công", command=lambda: self.setRecordType(isManual=True), hover=True)
+        self.radioManual = ctk.CTkRadioButton(master=self.radioGroupFrame, text="Thủ công", command=lambda: self.setRecordType(isManual=True), hover=True,text_font=(self.TEXTFONT, -16))
         self.radioManual.grid(row=0, column=0, padx=5, pady=5, sticky='news')
-        self.radioAuto = ctk.CTkRadioButton(master=self.radioGroupFrame, text="Tự động", command=lambda: self.setRecordType(isManual=False), hover=True)
+        self.radioAuto = ctk.CTkRadioButton(master=self.radioGroupFrame, text="Tự động", command=lambda: self.setRecordType(isManual=False), hover=True,text_font=(self.TEXTFONT, -16))
         self.radioAuto.grid(row=0, column=1, padx=5, pady=5, sticky='news')
 
         #====================Detail Setting Frame===================
-        self.labelIntervalTime = ctk.CTkLabel(master=self.detailSettingFrame, text="Khoảng thời gian đo (s)")
+        self.labelIntervalTime = ctk.CTkLabel(master=self.detailSettingFrame, text="Khoảng thời gian đo (s)",text_font=(self.TEXTFONT, -16))
         self.labelIntervalTime.grid(row=0, column=0, padx=5, pady=5, sticky='nes')
         self.intervalTimeStringVar = ctk.StringVar()
-        self.intervalTime = ctk.CTkEntry(master=self.detailSettingFrame, textvariable=self.intervalTimeStringVar)
+        self.intervalTime = ctk.CTkEntry(master=self.detailSettingFrame, textvariable=self.intervalTimeStringVar,text_font=(self.TEXTFONT, -16))
         self.intervalTime.grid(row=0, column=1, padx=5, pady=5, sticky='news')
         self.loadData()
 

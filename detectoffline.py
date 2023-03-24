@@ -55,12 +55,21 @@ class DetectOffline:
                 }
                 Constance.historyCV.append(msg_dict)
             elif self.option == 2 and distance != -1:
-                msg_dict = {
-                    'timepoint': timer,
-                    'voltage': float(res),
-                    'time': now.strftime("%H:%M:%S")
-                }
-                Constance.historyTV.append(msg_dict)
+                if port == None:
+                    msg_dict = {
+                        'timepoint': timer,
+                        'voltage1': float(res[0]),
+                        'voltage2': float(res[1]),
+                        'time': now.strftime("%H:%M:%S")
+                    }
+                    Constance.historyTVV.append(msg_dict)
+                else:
+                    msg_dict = {
+                        'timepoint': timer,
+                        'voltage': float(res),
+                        'time': now.strftime("%H:%M:%S")
+                    }
+                    Constance.historyTV.append(msg_dict)
             elif self.option == 3:
                 msg_dict = {
                     'ampe2': round(float(res[1])/Rvalue, 2),
