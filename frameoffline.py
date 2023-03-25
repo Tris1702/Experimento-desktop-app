@@ -312,9 +312,9 @@ class FrameOffline:
                 b = round(b, decimalPlace)
 
                 if b > 0:
-                    labelLine = "y=%fx + %fb" % (m, b)
+                    labelLine = "y=%fx + %f" % (m, b)
                 else:
-                    labelLine = "y=%fx - %fb" % (m, abs(b))
+                    labelLine = "y=%fx - %f" % (m, abs(b))
                 ax.axline((x[0], y[0]),(x[-1], y[-1]), linewidth=2, color='r', label=labelLine)
                 fig.legend()
                 fig.show()
@@ -337,9 +337,9 @@ class FrameOffline:
                 b = round(b, decimalPlace)
 
                 if b > 0:
-                    labelLine = "y=%fx + %fb" % (m, b)
+                    labelLine = "y=%fx + %f" % (m, b)
                 else:
-                    labelLine = "y=%fx - %fb" % (m, abs(b))
+                    labelLine = "y=%fx - %f" % (m, abs(b))
                 ax2.axline((x[0], y[0]),(x[-1], y[-1]), linewidth=2, color='r', label=labelLine)
                 fig2.legend()
                 fig2.show()
