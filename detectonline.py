@@ -84,7 +84,7 @@ class DetectOnline:
 
     
     def publish_history(self, message):
-        print(Constance.history)
+        # print(Constance.history)
         msg_dict = {}
         try:
             if message == 'AV':

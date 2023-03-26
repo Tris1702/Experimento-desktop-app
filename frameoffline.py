@@ -453,7 +453,7 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Voltage')
             self.tableLogger.heading(3, text='Ampe')
-            self.clearData()
+            self.loadData()
             self.entryValue.configure(placeholder_text="Giá trị  cường độ dòng điện (A)")
             self.entryValue.grid(row=2, column=1, sticky='nsew')
             self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
@@ -467,7 +467,7 @@ class FrameOffline:
             self.tableLogger.heading(2, text='Khoảng cách (cm)')
             self.tableLogger.heading(3, text='Hiệu điện thế (V)')
             self.entryValue.configure(placeholder_text="Giá trị khoảng cách (cm)")
-            self.clearData()
+            self.loadData()
             self.entryValue.grid(row=2, column=1, sticky='nsew')
             self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
             self.cbWhichLesson.grid_forget()
@@ -476,15 +476,22 @@ class FrameOffline:
         elif option == "V-t":
             self.optionMeasure = 2
             self.detect.option = 2
-            self.tableLogger.heading(1, text='ID')
-            self.tableLogger.heading(2, text='Time (s)')
-            self.tableLogger.heading(3, text='Hiệu điện thế Uc (V)')
             self.entryValue.configure(placeholder_text="Giá trị thời gian lặp")
             self.entryValue.grid_forget()
-            self.clearData()
+            if self.whichLesson == 1:
+                self.tableLogger.heading(1, text='ID')
+                self.tableLogger.heading(2, text='Time (s)')
+                self.tableLogger.heading(3, text='Hiệu điện thế Uc (V)')
+                self.tableLogger["displaycolumns"] =[1,2,3,4]
+            else:
+                self.tableLogger.heading(1, text='ID')
+                self.tableLogger.heading(2, text='Time (s)')
+                self.tableLogger.heading(3, text='Hiệu điện thế (V)')
+                self.tableLogger["displaycolumns"] =[1,2,3]
+
+            self.loadData()
             self.cbWhichPort.grid_forget()
             self.cbWhichLesson.grid(row=0, column=8, sticky='nsw')
-            self.tableLogger["displaycolumns"] =[1,2,3,4]
 
         elif option == 'I1-I2':
             self.optionMeasure = 3
@@ -492,7 +499,7 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text='Voltage 1')
             self.tableLogger.heading(3, text='Ampe 2')
-            self.clearData()
+            self.loadData()
             self.entryValue.grid(row=2, column=1, sticky='nsew')
             self.entryValue.configure(placeholder_text="Giá trị R")
             self.cbWhichPort.grid_forget()
@@ -503,12 +510,45 @@ class FrameOffline:
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text=Constance.symbolIP1)
             self.tableLogger.heading(3, text=Constance.symbolIP2)
-            self.clearData()
+            self.loadData()
             self.entryValue.grid_forget()
             self.cbWhichPort.grid_forget()
             self.tableLogger["displaycolumns"] =[1,2,3]
             self.cbWhichLesson.grid_forget()
     
+    def loadData(self):
+        self.clearTableData()
+        if self.optionMeasure == 0:
+            for i in range(0, len(Constance.historyAV)):
+                item = Constance.historyAV[i]
+                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        elif self.optionMeasure == 1:
+            for i in range(0, len(Constance.historyCV)):
+                item = Constance.historyCV[i]
+                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['centimeter'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        elif self.optionMeasure == 2:
+            if self.whichLesson == 1:
+                for i in range(0, len(Constance.historyTVV)):
+                    item = Constance.historyTVV[i]
+                    self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage1'],item['voltage2']), tags='odd' if (i+1)%2 else 'even')
+            else:
+                for i in range(0, len(Constance.historyTV)):
+                    item = Constance.historyTV[i]
+                    self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        elif self.optionMeasure == 3:
+            for i in range(0, len(Constance.historyI1I2)):
+                item = Constance.historyI1I2[i]
+                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe1'],item['ampe2']), tags='odd' if (i+1)%2 else 'even')
+        elif self.optionMeasure == 4:
+            print(Constance.historyI1I2)
+            for i in range(0, len(Constance.historyI1I2)):
+                item = Constance.historyI1I2[i]
+                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe1'],item['ampe2']), tags='odd' if (i+1)%2 else 'even')
+    
+    def clearTableData(self):
+        for item in self.tableLogger.get_children():
+            self.tableLogger.delete(item)
+
     def clearData(self):
         if self.optionMeasure == 0:
             Constance.historyAV = []
@@ -516,12 +556,11 @@ class FrameOffline:
             Constance.historyCV = []
         elif self.optionMeasure == 2:
             Constance.historyTV = []
+            Constance.historyTVV = []
         elif self.optionMeasure == 3:
             Constance.historyA2V1 = []
         else:
             Constance.historyI1I2 = []
-        for item in self.tableLogger.get_children():
-            self.tableLogger.delete(item)
 
     def changePortMeasure(self, option):
         if option == "Cổng 1":
@@ -548,10 +587,23 @@ class FrameOffline:
     def changeLesson(self, option):
         if option == 'Phóng tụ':
             self.whichLesson = 1
+            for item in self.tableLogger.get_children():
+                self.tableLogger.delete(item)
+            self.tableLogger.heading(3, text="Hiệu điện thế Uc (V)")
+            for i in range(0, len(Constance.historyTVV)):
+                item = Constance.historyTVV[i]
+                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage1'],item['voltage2']), tags='odd' if (i+1)%2 else 'even')
+
             self.tableLogger["displaycolumns"] =[1,2,3,4]
             self.cbWhichPort.grid_forget()
         else:
             self.whichLesson = 2
-            self.tableLogger.heading(3, text="Voltage")
+            for item in self.tableLogger.get_children():
+                self.tableLogger.delete(item)
+            for i in range(0, len(Constance.historyTV)):
+                item = Constance.historyTV[i]
+                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+
+            self.tableLogger.heading(3, text="Hiệu điện thế (V)")
             self.tableLogger["displaycolumns"] =[1,2,3]
             self.cbWhichPort.grid(row=2, column=2, sticky='nsew')

@@ -77,7 +77,7 @@ class DetectOffline:
                     'time': now.strftime("%H:%M:%S")
                 }
                 Constance.historyA2V1.append(msg_dict)
-            else:
+            elif self.option == 4:
                 try:
                     print(Constance.formulaIP1[4:])
                     R1value = float(Constance.formulaIP1[4:])
