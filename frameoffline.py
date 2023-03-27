@@ -169,16 +169,12 @@ class FrameOffline:
                 self.detect.measure(0, timer)
             else:
                 self.detect.measure(0, timer, port=self.whichPort)
-            if self.optionMeasure == 0:
-                self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
-            elif self.optionMeasure == 1:
-                self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
+            if self.whichLesson == 1:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyTVV), values=(len(Constance.historyTVV),Constance.historyTVV[-1]['timepoint'],Constance.historyTVV[-1]['voltage1'],Constance.historyTVV[-1]['voltage2']), tags='odd' if len(Constance.historyTVV)%2 else 'even')
             else:
-                if self.whichLesson == 1:
-                    self.tableLogger.insert("", 0, iid=len(Constance.historyTVV), values=(len(Constance.historyTVV),Constance.historyTVV[-1]['timepoint'],Constance.historyTVV[-1]['voltage1'],Constance.historyTVV[-1]['voltage2']), tags='odd' if len(Constance.historyTVV)%2 else 'even')
-                else:
-                    self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
-        except:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+        except NameError:
+            print(NameError)
             self.timer_measure.cancel()
             messagebox.showerror(title='Alert', message="Yêu cầu điền thông tin đầy đủ")
 
@@ -193,8 +189,6 @@ class FrameOffline:
                 self.tableLogger.insert("", 0, iid=len(Constance.historyAV), values=(len(Constance.historyAV),Constance.historyAV[-1]['ampe'],Constance.historyAV[-1]['voltage']), tags='odd' if len(Constance.historyAV)%2 else 'even')
             elif self.optionMeasure == 1:
                 self.tableLogger.insert("", 0, iid=len(Constance.historyCV), values=(len(Constance.historyCV),Constance.historyCV[-1]['centimeter'],Constance.historyCV[-1]['voltage']), tags='odd' if len(Constance.historyCV)%2 else 'even')
-            elif self.optionMeasure == 2:
-                self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
         except:
             messagebox.showerror(title='Alert', message="Yêu cầu điền thông tin đầy đủ")
 
@@ -226,6 +220,7 @@ class FrameOffline:
                 xValue, yValue = self.getSmoothXValueAndYValue()
             except:
                 messagebox.showwarning(title="Cảnh báo", message="Yêu cầu nhiều điểm dữ liệu hơn!")
+                return
         else:
             xValue, yValue = self.getXValueAndYValue()
         if self.optionMeasure == 0:
@@ -561,6 +556,7 @@ class FrameOffline:
             Constance.historyA2V1 = []
         else:
             Constance.historyI1I2 = []
+        self.clearTableData()
 
     def changePortMeasure(self, option):
         if option == "Cổng 1":
