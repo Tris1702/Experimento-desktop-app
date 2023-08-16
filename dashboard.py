@@ -35,8 +35,8 @@ class Dashboard(ctk.CTk):
 
         #==============FRAME RIGHT===============
 
-        self.frame_right = FrameOnline(parent=self).main_frame
-        self.frame_right.grid(row=0, column=2, padx=5, pady=5, sticky='nsew')
+        # self.frame_right = FrameOnline(parent=self).main_frame
+        # self.frame_right.grid(row=0, column=2, padx=5, pady=5, sticky='nsew')
 
         #==============FRAME SETTING=============
 

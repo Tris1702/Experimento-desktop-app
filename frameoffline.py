@@ -10,7 +10,7 @@ from constance import Constance
 from tkinter import messagebox
 import xlsxwriter
 import numpy as np
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import PchipInterpolator
 import time
 
 class FrameOffline:
@@ -52,7 +52,7 @@ class FrameOffline:
         self.cbCom = ctk.CTkComboBox(master=self.frame1, values =self.detect.get_coms(), text_font=(self.TEXTFONT, -16))
         self.cbCom.grid(row=0, column=1, sticky='nsew')
 
-        self.btnRefreshCom = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Cập nhật", text_font=(self.TEXTFONT, -14), command=lambda: self.reloadCom())
+        self.btnRefreshCom = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Cập nhật", text_font=(self.TEXTFONT, -14), command=lambda: self.reloadCom)
         self.btnRefreshCom.grid(row=0, column=2, sticky='nsew')
 
             #===Second line===
@@ -214,7 +214,7 @@ class FrameOffline:
     def drawChart(self, option):
         self.fig = plt.figure() 
         self.ax = self.fig.add_subplot(111)
-        self.fig.canvas.mpl_connect('pick_event', self.onpick) 
+        self.fig.canvas.mpl_connect('pick_event', self.onpick)
         if self.optionMeasure in [3,4]:
             try:
                 xValue, yValue = self.getSmoothXValueAndYValue()
@@ -236,8 +236,8 @@ class FrameOffline:
             self.ax.set_ylabel('Voltage 1')
             self.ax.set_xlabel('Ampe 2')
         else:
-            self.ax.set_ylabel(Constance.symbolIP1 + "("+Constance.unitIP1+")")
-            self.ax.set_xlabel(Constance.symbolIP2 + "("+Constance.unitIP2+")")
+            self.ax.set_ylabel(Constance.symbolIP2 + "("+Constance.unitIP2+")")
+            self.ax.set_xlabel(Constance.symbolIP1 + "("+Constance.unitIP1+")")
         
         if self.optionMeasure == 2:
             if self.whichLesson == 1:
@@ -247,9 +247,14 @@ class FrameOffline:
             else:
                 self.line, = self.ax.plot(xValue, yValue, picker=True, pickradius=10)
         else:
-            self.line, = self.ax.plot(xValue, yValue, picker=True, pickradius=10)
+            if self.optionMeasure == 4:
+                self.ax.plot([0, yValue[len(yValue)-1]],[0, xValue[len(xValue)-1]],'r*-', scalex = False, scaley = False)
+                # self.line2, = self.ax.plot([xValue[len(xValue),yValue[len(yValue)-1]]],'r*', scalex = False, scaley = False)
+                self.line1, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
+            else:
+                self.line, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
         self.fig.show()
-    
+
     def onpick(self, event):
         if self.optionMeasure == 4:
             if event.artist!=self.line: 
@@ -276,14 +281,14 @@ class FrameOffline:
                 xValue, yValue = self.getXValueAndYValue()
                 if self.whichLesson == 1:
                     if event.artist==self.line1: 
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue[0], decimalPlace = Constance.decimalPlacesIP1)
+                        self.drawBestStraightLine(xValue=xValue, yValue=yValue[0], decimalPlace = Constance.decimalPlacesIP2)
                     elif event.artist==self.line2:
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue[1], decimalPlace = Constance.decimalPlacesIP2)
+                        self.drawBestStraightLine(xValue=xValue, yValue=yValue[1], decimalPlace = Constance.decimalPlacesIP1)
                 else:
                     if self.whichPort == 0:
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue, decimalPlace = Constance.decimalPlacesIP1)
-                    else:
                         self.drawBestStraightLine(xValue=xValue, yValue=yValue, decimalPlace = Constance.decimalPlacesIP2)
+                    else:
+                        self.drawBestStraightLine(xValue=xValue, yValue=yValue, decimalPlace = Constance.decimalPlacesIP1)
                 
                 Constance.ind = []
             return True
@@ -295,8 +300,8 @@ class FrameOffline:
             try:
                 xValue, yValue = self.getSmoothXValueAndYValue()    
                 fig, ax = plt.subplots()
-                ax.set_ylabel(Constance.symbolIP1 + "("+Constance.unitIP1+")")
-                ax.set_xlabel(Constance.symbolIP2 + "("+Constance.unitIP2+")")
+                ax.set_ylabel(Constance.symbolIP2 + "("+Constance.unitIP2+")")
+                ax.set_xlabel(Constance.symbolIP1 + "("+Constance.unitIP1+")")
                 ax.plot(xValue, yValue, picker=False)
                 m, b = np.polyfit(xValue[Constance.ind[0]:Constance.ind[1]], yValue[Constance.ind[0]:Constance.ind[1]], 1)
                 x = xValue[Constance.ind[0]:(Constance.ind[1]+1)]
@@ -353,7 +358,7 @@ class FrameOffline:
         df_y = mean['ysort']
         xValue = df_x
         yValue = df_y
-        X_Y_Spline = make_interp_spline(xValue, yValue)
+        X_Y_Spline = PchipInterpolator(xValue, yValue)
         xValue = np.linspace(xValue.min(), xValue.max(), 150)
         yValue = X_Y_Spline(xValue)
         return xValue, yValue
@@ -425,7 +430,7 @@ class FrameOffline:
             else:
                 worksheet.write(0, 0, 'STT')
                 worksheet.write(0, 1, Constance.symbolIP1+"("+Constance.unitIP1+")")
-                worksheet.write(0, 2, Constance.symbolIP1+"("+Constance.unitIP1+")")
+                worksheet.write(0, 2, Constance.symbolIP2+"("+Constance.unitIP2+")")
             if self.optionMeasure == 2 and self.whichLesson == 1:
                 for row in range (1, len(xValue)+1):
                     worksheet.write(row, 0, row)

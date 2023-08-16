@@ -13,8 +13,8 @@ from datetime import datetime
 
 class DetectOnline:
     def __init__(self):
-        self.BROKER = 'broker.emqx.io'
-        # self.BROKER='broker.mqttdashboard.com'
+        # self.BROKER = 'broker.emqx.io'
+        self.BROKER='broker.mqttdashboard.com'
         # self.BROKER = 'test.mosquitto.org'
         self.PORT = 8084
         self.CLIENT_ID = "python-mqtt-ws-pub-sub-{id}".format(id=random.randint(0, 1000))

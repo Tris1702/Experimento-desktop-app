@@ -35,7 +35,6 @@ class DetectOffline:
             res = self.SERIAL_PORT.readline()
         res = res.decode("utf-8").replace("\r\n","")
         res = res.split(",")
-        print(res)
         if port != None:
             res = res[port]
         
@@ -116,7 +115,6 @@ class DetectOffline:
                         Constance.historyI1I2.append(msg_dict)
                 except:
                     return
-            print(msg_dict)
             Constance.history.append(msg_dict)
 
     def measure(self, distance = 0, timer = None, port=None, Rvalue=None):
