@@ -56,7 +56,7 @@ class FrameOffline:
         self.btnRefreshCom.grid(row=0, column=2, sticky='nsew')
 
             #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-cm", "V-t", "V1-I2"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-t", "V1-I2"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
         self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị khoảng cách (cm)", text_font=(self.TEXTFONT, -16))
