@@ -11,11 +11,12 @@ class DetectOffline:
         self.option = option
 
     def set_serial_port(self, serialPortName):
-        self.SERIAL_PORT = serial.Serial(serialPortName, 9600, timeout=0.2)
+        self.SERIAL_PORT = serial.Serial(serialPortName, 9600, timeout=0.05)
         if self.first_time == True:
             self.first_time = False
             self.add_data(distance=None, timer=0)
-    
+            
+
     def get_coms(self):
         print('get com')
         ports = serial.tools.list_ports.comports()

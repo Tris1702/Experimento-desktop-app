@@ -56,7 +56,7 @@ class FrameOffline:
         self.btnRefreshCom.grid(row=0, column=2, sticky='nsew')
 
         #     #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-t", "V1-I2"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-cm","V-t", "V1-I2"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
         self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị khoảng cách (cm)", font=(self.TEXTFONT, -16))
@@ -249,7 +249,7 @@ class FrameOffline:
         else:
             if self.optionMeasure == 4:
                 tmp, yOldValue = self.getXValueAndYValue()
-                self.ax.plot(yOldValue, [y/(max(yOldValue)/max(xValue)) for y in yOldValue], 'r*-', scalex = False, scaley = False)
+                self.ax.plot(yOldValue, yOldValue, 'r-', scalex = False, scaley = False)
                 # self.line2, = self.ax.plot([xValue[len(xValue),yValue[len(yValue)-1]]],'r*', scalex = False, scaley = False)
                 self.line1, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
             else:
