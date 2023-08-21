@@ -110,31 +110,31 @@ class Constance:
         # }
     ]
     historyI1I2 = [
-        # {
-        #     'ampe2': 1,
-        #     'ampe1': 10,
-        #     'time': '11:11:11'
-        # },
-        # {
-        #     'ampe2': 2,
-        #     'ampe1': 15,
-        #     'time': '11:11:11'
-        # },
-        # {
-        #     'ampe2': 3,
-        #     'ampe1': 22,
-        #     'time': '11:11:11'
-        # },
-        # {
-        #     'ampe2': 5,
-        #     'ampe1': 29,
-        #     'time': '11:11:11'
-        # },
-        # {
-        #     'ampe2': 7,
-        #     'ampe1': 30,
-        #     'time': '11:11:11'
-        # }
+        {
+            'ampe2': 1,
+            'ampe1': 10,
+            'time': '11:11:11'
+        },
+        {
+            'ampe2': 2,
+            'ampe1': 15,
+            'time': '11:11:11'
+        },
+        {
+            'ampe2': 3,
+            'ampe1': 22,
+            'time': '11:11:11'
+        },
+        {
+            'ampe2': 5,
+            'ampe1': 29,
+            'time': '11:11:11'
+        },
+        {
+            'ampe2': 7,
+            'ampe1': 30,
+            'time': '11:11:11'
+        }
     ]
     root = None
     isManualRecord = True

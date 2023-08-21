@@ -248,7 +248,8 @@ class FrameOffline:
                 self.line, = self.ax.plot(xValue, yValue, picker=True, pickradius=10)
         else:
             if self.optionMeasure == 4:
-                self.ax.plot([0, yValue[len(yValue)-1]],[0, xValue[len(xValue)-1]],'r*-', scalex = False, scaley = False)
+                tmp, yOldValue = self.getXValueAndYValue()
+                self.ax.plot(yOldValue, [y/(max(yOldValue)/max(xValue)) for y in yOldValue], 'r*-', scalex = False, scaley = False)
                 # self.line2, = self.ax.plot([xValue[len(xValue),yValue[len(yValue)-1]]],'r*', scalex = False, scaley = False)
                 self.line1, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
             else:
