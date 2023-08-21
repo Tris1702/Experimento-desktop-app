@@ -46,23 +46,23 @@ class FrameOffline:
         self.frame1.grid_columnconfigure(3, weight=0)
         
             #===First line===
-        self.labelCom = ctk.CTkLabel(master=self.frame1, text="Cổng kết nối", text_font=(self.TEXTFONT, -16))
+        self.labelCom = ctk.CTkLabel(master=self.frame1, text="Cổng kết nối", font=(self.TEXTFONT, -16))
         self.labelCom.grid(row=0, column=0, sticky='nsw')
 
-        self.cbCom = ctk.CTkComboBox(master=self.frame1, values =self.detect.get_coms(), text_font=(self.TEXTFONT, -16))
+        self.cbCom = ctk.CTkComboBox(master=self.frame1, values =self.detect.get_coms(), font=(self.TEXTFONT, -16))
         self.cbCom.grid(row=0, column=1, sticky='nsew')
 
-        self.btnRefreshCom = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Cập nhật", text_font=(self.TEXTFONT, -14), command=lambda: self.reloadCom())
+        self.btnRefreshCom = ctk.CTkButton(master=self.frame1, corner_radius=10, text="Cập nhật", font=(self.TEXTFONT, -14), command=lambda: self.reloadCom())
         self.btnRefreshCom.grid(row=0, column=2, sticky='nsew')
 
         #     #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-t", "V1-I2"], text_font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-t", "V1-I2"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
-        self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị khoảng cách (cm)", text_font=(self.TEXTFONT, -16))
+        self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị khoảng cách (cm)", font=(self.TEXTFONT, -16))
         self.entryValue.grid(row=2, column=1, sticky='nsew')
 
-        self.cbWhichPort = ctk.CTkComboBox(master=self.frame1, values=["Cổng 1", "Cổng 2"], text_font=(self.TEXTFONT, -16), command=self.changePortMeasure)
+        self.cbWhichPort = ctk.CTkComboBox(master=self.frame1, values=["Cổng 1", "Cổng 2"], font=(self.TEXTFONT, -16), command=self.changePortMeasure)
         self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
 
         # #========Frame2===========
@@ -87,18 +87,18 @@ class FrameOffline:
         self.frame3.grid_columnconfigure(6, minsize=5)
         self.frame3.grid_columnconfigure(8, weight=0)
 
-        self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Kết quả', text_font=(self.TEXTFONT, -16))
+        self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Kết quả', font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
 
-        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Vẽ', text_font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure))
+        self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Vẽ', font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure))
         self.btnDrawChart.grid(row=0, column = 1, sticky='nsw')
 
-        self.btnExport = ctk.CTkButton(master=self.frame3, text='Xuất file', text_font=(self.TEXTFONT, -16), command=self.exportData)
+        self.btnExport = ctk.CTkButton(master=self.frame3, text='Xuất file', font=(self.TEXTFONT, -16), command=self.exportData)
         self.btnExport.grid(row=0, column = 3, sticky='nsw')
 
-        self.cbWhichLesson = ctk.CTkComboBox(master=self.frame3, values=['Phóng tụ', 'Nạp tụ'], text_font=(self.TEXTFONT, -16), command=self.changeLesson)
+        self.cbWhichLesson = ctk.CTkComboBox(master=self.frame3, values=['Phóng tụ', 'Nạp tụ'], font=(self.TEXTFONT, -16), command=self.changeLesson)
 
-        self.btnExport = ctk.CTkButton(master=self.frame3, text='Xóa dữ liệu', text_font=(self.TEXTFONT, -16), command=self.clearData)
+        self.btnExport = ctk.CTkButton(master=self.frame3, text='Xóa dữ liệu', font=(self.TEXTFONT, -16), command=self.clearData)
         self.btnExport.grid(row=0, column = 5, sticky='nsw')
 
         styleTreeView = ttk.Style()

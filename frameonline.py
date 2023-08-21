@@ -21,13 +21,13 @@ class FrameOnline:
         self.frame.grid_rowconfigure((0,2,3), weight=1)
         self.frame.grid_rowconfigure(1, weight=0)
         self.frame.grid_columnconfigure(0, weight=1)
-        self.labelTopic = ctk.CTkLabel(master=self.frame, text="Tên đăng nhập", text_font=(self.TEXTFONT, -16))
+        self.labelTopic = ctk.CTkLabel(master=self.frame, text="Tên đăng nhập", font=(self.TEXTFONT, -16))
         self.labelTopic.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        self.entryTopic = ctk.CTkEntry(master=self.frame, placeholder_text="CA1_B19DCCN000", text_font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
+        self.entryTopic = ctk.CTkEntry(master=self.frame, placeholder_text="CA1_B19DCCN000", font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
         self.entryTopic.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
-        self.entryAdminTopic = ctk.CTkEntry(master=self.frame, placeholder_text="Mã phòng", text_font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
+        self.entryAdminTopic = ctk.CTkEntry(master=self.frame, placeholder_text="Mã phòng", font=(self.TEXTFONT, -16), corner_radius=10, border_width=1)
         self.entryAdminTopic.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-        self.btnSubcribe = ctk.CTkButton(master=self.frame, text="Đăng nhập", command=lambda: self.subcribeTopic(self.entryTopic.get(), self.entryAdminTopic.get()), text_font=(self.TEXTFONT, -16))
+        self.btnSubcribe = ctk.CTkButton(master=self.frame, text="Đăng nhập", command=lambda: self.subcribeTopic(self.entryTopic.get(), self.entryAdminTopic.get()), font=(self.TEXTFONT, -16))
         self.btnSubcribe.grid(row=3, column=0, padx=5, pady=5, sticky="new")
 
     def subcribeTopic(self, topic, adminTopic):
