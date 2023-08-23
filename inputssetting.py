@@ -120,7 +120,6 @@ class InputsSetting(ctk.CTkToplevel):
 
     def onSave(self):
         self.updateData()
-        self.destroy()
     
     def updateData(self):
         if self.cbSelectInput.get() == 'Input 1':

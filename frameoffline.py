@@ -18,7 +18,8 @@ class FrameOffline:
         super().__init__
         self.isMeasuring = False
         self.TEXTFONT = "Roboto Medium"
-        self.optionMeasure = 1
+        self.optionMeasure = 2
+        self.subOptionMeasure = 1
         self.whichPort = 0
         self.whichLesson = 1
         self.detect = DetectOffline(option= self.optionMeasure)
@@ -56,11 +57,11 @@ class FrameOffline:
         self.btnRefreshCom.grid(row=0, column=2, sticky='nsew')
 
         #     #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-cm","V-t", "V1-I2"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-t", "I2-I1"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
         self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị khoảng cách (cm)", font=(self.TEXTFONT, -16))
-        self.entryValue.grid(row=2, column=1, sticky='nsew')
+        # self.entryValue.grid(row=2, column=1, sticky='nsew')
 
         self.cbWhichPort = ctk.CTkComboBox(master=self.frame1, values=["Cổng 1", "Cổng 2"], font=(self.TEXTFONT, -16), command=self.changePortMeasure)
         self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
@@ -85,7 +86,7 @@ class FrameOffline:
         self.frame3.grid_columnconfigure(4, minsize=5)
         self.frame3.grid_columnconfigure(5, weight=0)
         self.frame3.grid_columnconfigure(6, minsize=5)
-        self.frame3.grid_columnconfigure(8, weight=0)
+        self.frame3.grid_columnconfigure(7, weight=0)
 
         self.labelLogger = ctk.CTkLabel(master=self.frame3,text='Kết quả', font=(self.TEXTFONT, -16))
         self.labelLogger.grid(row=0, column=0, sticky='nsw')
@@ -93,13 +94,15 @@ class FrameOffline:
         self.btnDrawChart = ctk.CTkButton(master=self.frame3, text='Vẽ', font=(self.TEXTFONT, -16), command=lambda: self.drawChart(self.optionMeasure))
         self.btnDrawChart.grid(row=0, column = 1, sticky='nsw')
 
+        self.btnDrawChart2 = ctk.CTkButton(master=self.frame3, text='Vẽ I1 theo t', font=(self.TEXTFONT, -16), command=lambda: self.drawChart2())
+
         self.btnExport = ctk.CTkButton(master=self.frame3, text='Xuất file', font=(self.TEXTFONT, -16), command=self.exportData)
-        self.btnExport.grid(row=0, column = 3, sticky='nsw')
+        self.btnExport.grid(row=0, column = 5, sticky='nsw')
 
         self.cbWhichLesson = ctk.CTkComboBox(master=self.frame3, values=['Phóng tụ', 'Nạp tụ'], font=(self.TEXTFONT, -16), command=self.changeLesson)
 
         self.btnExport = ctk.CTkButton(master=self.frame3, text='Xóa dữ liệu', font=(self.TEXTFONT, -16), command=self.clearData)
-        self.btnExport.grid(row=0, column = 5, sticky='nsw')
+        self.btnExport.grid(row=0, column = 7, sticky='nsw')
 
         styleTreeView = ttk.Style()
         styleTreeView.theme_use('clam')
@@ -135,6 +138,7 @@ class FrameOffline:
         self.fig = plt.figure() 
         self.ax = self.fig.add_subplot(111)
         self.fig.canvas.mpl_connect('pick_event', self.onpick)   
+        self.changeOptionMeasure("V-t")
         
     def reloadCom(self):
         listComs = self.detect.get_coms()
@@ -209,8 +213,9 @@ class FrameOffline:
         self.detect.measure()
         try:
             self.tableLogger.insert("", 0, iid=len(Constance.historyI1I2), values=(len(Constance.historyI1I2),Constance.historyI1I2[-1]['ampe1'],Constance.historyI1I2[-1]['ampe2']), tags='odd' if len(Constance.historyI1I2)%2 else 'even')
-        except:
+        except NameError:
             messagebox.showerror(title='Alert', message="Kiểm tra thông tin cài đặt các đầu đo")
+
     def drawChart(self, option):
         self.fig = plt.figure() 
         self.ax = self.fig.add_subplot(111)
@@ -248,14 +253,25 @@ class FrameOffline:
                 self.line, = self.ax.plot(xValue, yValue, picker=True, pickradius=10)
         else:
             if self.optionMeasure == 4:
-                tmp, yOldValue = self.getXValueAndYValue()
-                self.ax.plot(yOldValue, yOldValue, 'r-', scalex = False, scaley = False)
-                # self.line2, = self.ax.plot([xValue[len(xValue),yValue[len(yValue)-1]]],'r*', scalex = False, scaley = False)
-                self.line1, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
+                self.line, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
             else:
                 self.line, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
         self.fig.show()
 
+    def drawChart2(self):
+        tmp, yOldValue = self.getXValueAndYValue()
+        yOldValue = [y/0.17 for y in yOldValue]
+        xOldValue = np.array([yOldValue[0] + 0.1*x for x in range(0, len(yOldValue))])
+        yOldValue = np.array(yOldValue)
+
+        m, b = np.polyfit(yOldValue[0:len(yOldValue)-1], xOldValue[0:len(yOldValue)-1], 1)
+        
+        yy = m*yOldValue + b
+        
+        fig, ax = plt.subplots()
+        ax.plot(yy, yOldValue, 'r-')
+        fig.show()
+                    
     def onpick(self, event):
         if self.optionMeasure == 4:
             if event.artist!=self.line: 
@@ -303,19 +319,20 @@ class FrameOffline:
                 fig, ax = plt.subplots()
                 ax.set_ylabel(Constance.symbolIP2 + "("+Constance.unitIP2+")")
                 ax.set_xlabel(Constance.symbolIP1 + "("+Constance.unitIP1+")")
-                ax.plot(xValue, yValue, picker=False)
-                m, b = np.polyfit(xValue[Constance.ind[0]:Constance.ind[1]], yValue[Constance.ind[0]:Constance.ind[1]], 1)
-                x = xValue[Constance.ind[0]:(Constance.ind[1]+1)]
+                ax.plot(yValue, xValue, picker=False)
+                m, b = np.polyfit(yValue[Constance.ind[0]:Constance.ind[1]], xValue[Constance.ind[0]:Constance.ind[1]], 1)
+                x = yValue[Constance.ind[0]:(Constance.ind[1]+1)]
                 y = m*x + b
 
-                if decimalPlace == None: decimalPlace = 3
+                if decimalPlace == None: 
+                    decimalPlace = 3
                 m = round(m, decimalPlace)
                 b = round(b, decimalPlace)
 
                 if b > 0:
-                    labelLine = "y=%fx + %f" % (m, b)
+                    labelLine = "y=%3fx + %3f" % (m, b)
                 else:
-                    labelLine = "y=%fx - %f" % (m, abs(b))
+                    labelLine = "y=%3fx - %3f" % (m, abs(b))
                 ax.axline((x[0], y[0]),(x[-1], y[-1]), linewidth=2, color='r', label=labelLine)
                 fig.legend()
                 fig.show()
@@ -351,17 +368,9 @@ class FrameOffline:
         xValue, yValue = self.getXValueAndYValue()
         xValue = np.array(xValue)
         yValue = np.array(yValue)
-        df = pd.DataFrame()
-        df['xsort'] = xValue
-        df['ysort'] = yValue
-        mean = df.groupby('xsort').mean()
-        df_x = mean.index
-        df_y = mean['ysort']
-        xValue = df_x
-        yValue = df_y
-        X_Y_Spline = PchipInterpolator(xValue, yValue)
-        xValue = np.linspace(xValue.min(), xValue.max(), 150)
-        yValue = X_Y_Spline(xValue)
+        X_Y_Spline = PchipInterpolator(yValue, xValue)
+        yValue = np.linspace(yValue.min(), yValue.max(), 150)
+        xValue = X_Y_Spline(yValue)
         return xValue, yValue
 
     def getXValueAndYValue(self):
@@ -394,7 +403,11 @@ class FrameOffline:
                 yValue.append(value['voltage1'])
                 xValue.append(value['ampe2'])
         else:
-            for value in Constance.historyI1I2:
+            for index in range (0, len(Constance.historyI1I2)):
+                value = Constance.historyI1I2[index]
+                if (index > 0 and value['ampe2'] > Constance.historyI1I2[index-1]['ampe2']):
+                    yValue.pop()
+                    xValue.pop()
                 yValue.append(value['ampe1'])
                 xValue.append(value['ampe2'])
         return xValue, yValue
@@ -459,6 +472,7 @@ class FrameOffline:
             self.entryValue.grid(row=2, column=1, sticky='nsew')
             self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
             self.cbWhichLesson.grid_forget()
+            self.btnDrawChart2.grid_forget()
             self.tableLogger["displaycolumns"] =[1,2,3]
 
         elif option == "V-cm":
@@ -472,6 +486,7 @@ class FrameOffline:
             self.entryValue.grid(row=2, column=1, sticky='nsew')
             self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
             self.cbWhichLesson.grid_forget()
+            self.btnDrawChart2.grid_forget()
             self.tableLogger["displaycolumns"] =[1,2,3]
 
         elif option == "V-t":
@@ -492,6 +507,7 @@ class FrameOffline:
 
             self.loadData()
             self.cbWhichPort.grid_forget()
+            self.btnDrawChart2.grid_forget()
             self.cbWhichLesson.grid(row=0, column=8, sticky='nsw')
 
         elif option == 'I1-I2':
@@ -504,10 +520,13 @@ class FrameOffline:
             self.entryValue.grid(row=2, column=1, sticky='nsew')
             self.entryValue.configure(placeholder_text="Giá trị R")
             self.cbWhichPort.grid_forget()
+            self.btnDrawChart2.grid_forget()
             self.tableLogger["displaycolumns"] =[1,2,3]
-        elif option == 'V1-I2':
+        elif option == 'I2-I1':
             self.optionMeasure = 4
             self.detect.option = 4
+            self.btnDrawChart.configure(text='Vẽ I2 theo I1')
+            self.btnDrawChart2.grid(row=0, column=3, sticky='nsw')
             self.tableLogger.heading(1, text='ID')
             self.tableLogger.heading(2, text=Constance.symbolIP1)
             self.tableLogger.heading(3, text=Constance.symbolIP2)

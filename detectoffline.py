@@ -89,7 +89,8 @@ class DetectOffline:
                     ampe1 = None
                     ampe2 = None
 
-                    print(res[0])
+                    print("--> res: ", res[0], res[1], end="")
+                    print()
                     if operator1 == '/':
                         ampe1 = round(float(res[0])/R1value, int(Constance.decimalPlacesIP1))
                     elif operator1 == '*':
@@ -107,11 +108,13 @@ class DetectOffline:
                         ampe2 = round(float(res[1])+R2value, int(Constance.decimalPlacesIP2))
                     elif operator2 == '-':
                         ampe2 = round(float(res[1])-R2value, int(Constance.decimalPlacesIP2))
+
+                    print(ampe1, ampe2)
                     if ampe1 != None and ampe2 != None:
                         msg_dict = {
                             'ampe2': ampe2,
                             'ampe1': ampe1,
-                            'time': now.strftime("%H:%M:%S")
+                            'time': datetime.now()
                         }
                         Constance.historyI1I2.append(msg_dict)
                 except:
