@@ -37,6 +37,7 @@ class FrameSetting():
     def openSettingInputs(self):
         if self.inputsSetting is None or not self.inputsSetting.winfo_exists():
             self.inputsSetting = InputsSetting(self.main_frame)  # create window if its None or destroyed
+            self.inputsSetting
         else:
             self.inputsSetting.lift(aboveThis=self.main_frame)  # if window exists focus it
 

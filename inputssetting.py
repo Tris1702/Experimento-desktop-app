@@ -120,6 +120,8 @@ class InputsSetting(ctk.CTkToplevel):
 
     def onSave(self):
         self.updateData()
+        if Constance.currentLession == 2 or self.cbSelectInput.get() == 'Input 2':
+            self.destroy()
     
     def updateData(self):
         if self.cbSelectInput.get() == 'Input 1':

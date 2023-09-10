@@ -24,7 +24,7 @@ class DetectOffline:
         for i in ports:
             result.append(str(i).split()[0])
         if len(result) == 0: result = ['No COM detected']
-        return result
+        return result[::-1]
     
     def add_data(self, distance, timer, port=None, Rvalue=None):
         now = datetime.now()
@@ -64,12 +64,27 @@ class DetectOffline:
                     }
                     Constance.historyTVV.append(msg_dict)
                 else:
-                    msg_dict = {
-                        'timepoint': timer,
-                        'voltage': float(res),
-                        'time': now.strftime("%H:%M:%S")
-                    }
-                    Constance.historyTV.append(msg_dict)
+                    R1value = float(Constance.formulaIP1[4:])
+                    operator1 = Constance.formulaIP1[3:4]
+
+                    voltage = None
+
+                    if operator1 == '/':
+                        voltage = round(float(res)/R1value, int(Constance.decimalPlacesIP1))
+                    elif operator1 == '*':
+                        voltage = round(float(res)*R1value, int(Constance.decimalPlacesIP1))
+                    elif operator1 == '+':
+                        voltage = round(float(res)+R1value, int(Constance.decimalPlacesIP1))
+                    elif operator1 == '-':
+                        voltage = round(float(res)-R1value, int(Constance.decimalPlacesIP1))
+                    
+                    if voltage != None:
+                        msg_dict = {
+                            'timepoint': timer,
+                            'voltage': float(voltage),
+                            'time': now.strftime("%H:%M:%S")
+                        }
+                        Constance.historyTV.append(msg_dict)
             elif self.option == 3:
                 msg_dict = {
                     'ampe2': round(float(res[1])/Rvalue, 2),
