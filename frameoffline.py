@@ -1,20 +1,23 @@
 import customtkinter as ctk
 from detectoffline import DetectOffline
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 from tkinter import ttk
+from tkinter import Menu
 from tkinter.filedialog import asksaveasfile
-import pandas as pd
 import threading
 from constance import Constance
 from tkinter import messagebox
 import xlsxwriter
 import numpy as np
 from scipy.interpolate import PchipInterpolator
-from scipy.interpolate import make_interp_spline
+import pyautogui
+from scipy.optimize import curve_fit
 import time
 from numpy import ones,vstack
 from numpy.linalg import lstsq
+from chosingPoint import ChosingPoint
 
 class FrameOffline:
     def __init__(self, parent):
@@ -25,6 +28,7 @@ class FrameOffline:
         self.subOptionMeasure = 1
         self.whichPort = 0
         self.whichLesson = 2
+        Constance.whichLesson = 2
         self.detect = DetectOffline(option= self.optionMeasure)
         self.main_frame = ctk.CTkFrame(master=parent)
         self.main_frame.grid_rowconfigure(0, weight=0)
@@ -60,7 +64,7 @@ class FrameOffline:
         self.btnRefreshCom.grid(row=0, column=2, sticky='nsew')
 
         #     #===Second line===
-        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["V-t", "I2-I1"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
+        self.comboType = ctk.CTkComboBox(master=self.frame1, values=["Nạp tụ", "Phóng tụ"], font=(self.TEXTFONT, -16), command=self.changeOptionMeasure)
         self.comboType.grid(row=2, column=0, sticky='nsw')
 
         self.entryValue = ctk.CTkEntry(master=self.frame1, placeholder_text="Giá trị khoảng cách (cm)", font=(self.TEXTFONT, -16))
@@ -140,8 +144,7 @@ class FrameOffline:
 
         self.fig = plt.figure() 
         self.ax = self.fig.add_subplot(111)
-        self.fig.canvas.mpl_connect('pick_event', self.onpick)   
-        self.changeOptionMeasure("V-t")
+        self.changeOptionMeasure("Nạp tụ")
         
     def reloadCom(self):
         listComs = self.detect.get_coms()
@@ -176,14 +179,11 @@ class FrameOffline:
             print('set port')
             self.detect.set_serial_port(self.cbCom.get())
         try:
+            self.detect.measure(0, timer)
             if self.whichLesson == 1:
-                self.detect.measure(0, timer)
-            else:
-                self.detect.measure(0, timer, port=self.whichPort)
-            if self.whichLesson == 1:
-                self.tableLogger.insert("", 0, iid=len(Constance.historyTVV), values=(len(Constance.historyTVV),Constance.historyTVV[-1]['timepoint'],Constance.historyTVV[-1]['voltage1'],Constance.historyTVV[-1]['voltage2']), tags='odd' if len(Constance.historyTVV)%2 else 'even')
-            else:
                 self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage']), tags='odd' if len(Constance.historyTV)%2 else 'even')
+            else:
+                self.tableLogger.insert("", 0, iid=len(Constance.historyTV), values=(len(Constance.historyTV),Constance.historyTV[-1]['timepoint'],Constance.historyTV[-1]['voltage1'],Constance.historyTV[-1]['voltage2']), tags='odd' if len(Constance.historyTV)%2 else 'even')
         except NameError:
             print(NameError)
             self.isMeasuring = False
@@ -224,9 +224,30 @@ class FrameOffline:
         except NameError:
             messagebox.showerror(title='Alert', message="Kiểm tra thông tin cài đặt các đầu đo")
 
+    def remove0(self, y):
+        y = np.copy(y)
+        index = 0
+        for i in range(0, len(y)):
+            if y[i] == 0:
+                index = i
+        return [index+1, y[index+1:]]
+
+    def removeMax(self, y):
+        return y
+        # index = 0
+        # for i in range(0, len(y)):
+        #     if abs(y[i] - max(y)) <= 1:
+        #         index = i
+        # return y[index:]
+
     def drawChart(self, option):
+        self.drawTk = ctk.CTkToplevel()
+        self.drawTk.title("VL01 LAB")
         self.fig = plt.figure() 
         self.ax = self.fig.add_subplot(111)
+        self.fig.canvas = FigureCanvasTkAgg(self.fig, master = self.drawTk)
+        self.fig.canvas.get_tk_widget().pack()
+        self.fig.canvas.mpl_connect('button_press_event', self.onclick)
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
         if self.optionMeasure in [3,4]:
             try:
@@ -245,7 +266,7 @@ class FrameOffline:
         elif self.optionMeasure == 2:
             self.ax.set_xlabel('Time (s)')
             self.ax.set_ylabel('Hiệu điện thế (V)')
-            self.ax.set_ylim(-10, 10)
+            self.ax.set_ylim(-15, 15)
         elif self.optionMeasure == 3:
             self.ax.set_ylabel('Voltage 1')
             self.ax.set_xlabel('Ampe 2')
@@ -258,65 +279,102 @@ class FrameOffline:
         if self.optionMeasure == 2:
             self.ax.set_xticks(np.arange(0, Constance.timeMeasure+1, 1))
             
-            minValue = 0
-            maxValue = Constance.tl1Un*float(Constance.vs)
-            if yValue[0] >= yValue[len(yValue)-1]:
-                values, counts = np.unique([value for value in yValue if value >= Constance.tl2Un*float(Constance.vs)], return_counts=True)
-                maxValue = values[counts.argmax()]
-                minValue = Constance.tl2Un*float(Constance.vs)
-
-            firstGreaterThan0 = -1
-            firstMax = -1
-
-            if yValue[0] < yValue[len(yValue)-1]:
-                for index in range(0, len(yValue)):
-                    if yValue[index] == 0:
-                        firstGreaterThan0 = -1
-                    if yValue[index] > minValue and firstGreaterThan0 == -1:
-                        firstGreaterThan0 = index
-                    if firstMax == -1 or abs(yValue[index] - maxValue) <= abs(yValue[firstMax] - maxValue):
-                        firstMax = index
-                        # if index+1 < len(yValue) and abs(yValue[index+1] - maxValue) <= float(Constance.deltaV) and abs(yValue[index+1] - maxValue) < abs(yValue[index] - maxValue):
-                        #     firstMax = index + 1
-
-            else:
-                for index in range(len(yValue)-1, -1, -1):
-                    if firstGreaterThan0 == -1 or abs(yValue[index] - minValue) <= abs(yValue[firstGreaterThan0] - minValue):
-                        firstGreaterThan0 = index
-                        # if index - 1 > 0 and abs(yValue[index-1] - minValue) <= float(Constance.deltaV) and abs(yValue[index-1] - minValue) < abs(yValue[index] - minValue):
-                        #     firstGreaterThan0 = index - 1
-                    if firstMax == -1 or abs(yValue[index] - maxValue) < abs(yValue[firstMax] - maxValue):
-                        firstMax = index
-
-            print("maxvalue" + str(maxValue))
-            print("index0: " + str(firstGreaterThan0) +' '+ str(xValue[firstGreaterThan0]))
-            print("indexMax: " + str(firstMax) +' '+ str(xValue[firstMax]))    
-
-            result = str(round(abs(xValue[firstMax] - xValue[firstGreaterThan0]), 2))
+            # if Constance.whichLesson == 1:
+            #     # values, counts = np.unique([value for value in yValue if value > 0.5 and value >= yValue[len(yValue)//3]], return_counts=True)
+            #     # maxValue = values[counts.argmax()]
+            #     # Constance.vs = maxValue
+            #     # R1value = float(Constance.formulaIP1[4:])
+            #     # operator1 = Constance.formulaIP1[3:4]
                 
-            self.ax.text(0.05, 0.95, '\u03C4: ' + result +' s', transform=self.ax.transAxes, fontsize=14, verticalalignment='top') 
-            if self.whichLesson == 1:
-                self.line1, = self.ax.plot(xValue, yValue[0], 'r-', picker=True, pickradius=10, label='Ur')
-                self.line2, = self.ax.plot(xValue, yValue[1], 'b-', picker=True, pickradius=10, label='Uc')
-                self.fig.legend()
+            #     # if operator1 == '/':
+            #     #     Constance.vs = round(float(maxValue)/R1value, int(Constance.decimalPlacesIP1))
+            #     # elif operator1 == '*':
+            #     #     Constance.vs = round(float(maxValue)*R1value, int(Constance.decimalPlacesIP1))
+            #     # elif operator1 == '+':
+            #     #     Constance.vs = round(float(maxValue)+R1value, int(Constance.decimalPlacesIP1))
+            #     # elif operator1 == '-':
+            #     #     Constance.vs = round(float(maxValue)-R1value, int(Constance.decimalPlacesIP1))
+
+            #     minValue = Constance.tl2Un*float(Constance.vs)
+            # else:
+            #     minValue = 0
+            #     # maxValue = Constance.tl1Un*float(Constance.vs)
+
+            # firstGreaterThan0 = -1
+            # firstMax = -1
+            if Constance.whichLesson == 2:
+                y = self.replaceMax(yValue[1])
+                popt, _ = curve_fit(self.functionX, np.arange(1, len(y)+1, 1), np.array(y))
+                a, b, c = popt
+                tau = (1/b) * 0.03
+                Constance.A = a
+                Constance.B = b
+                Constance.C = c
+                Constance.tau = tau
+                print(tau)
             else:
-                if yValue[0] < yValue[len(yValue)-1]:
-                    self.line2, = self.ax.plot(xValue, [max(yValue) - value for value in yValue], 'r-', picker=False, pickradius=10, label='Ur')
-                    self.line, = self.ax.plot(xValue, yValue, 'b-', picker=True, pickradius=10, label='Uc')
-                else:
-                    self.line, = self.ax.plot(xValue, yValue, 'b-', picker=True, pickradius=10, label='Uc')
-                self.fig.legend()
+                y = self.removeMax(yValue)
+                popt, _ = curve_fit(self.functionX, np.arange(1, len(y)+1, 1), np.array(y))
+                a, b, c = popt
+                tau = (1/b) * 0.03
+                Constance.A = a
+                Constance.B = b
+                Constance.C = c
+                Constance.tau = tau
+                print(tau)
+            # if Constance.whichLesson == 1:
+            #     minValue = a
+            #     maxValue = Constance.tl1Un*float(Constance.vs)
+            # else:
+            #     minValue = 0
+            #     maxValue = 
+            # firstGreaterThan0 = -1
+            # firstMax = -1
+            # if Constance.whichLesson == 2:
+            #     for index in range(0, len(yValue[0])):
+            #         if yValue[0][index] == 0:
+            #             firstGreaterThan0 = -1
+            #         if yValue[0][index] >= 0 and firstGreaterThan0 == -1:
+            #             firstGreaterThan0 = index
+
+            # else:
+            #     for index in range(len(yValue)-1, -1, -1):
+            #         if firstMax == -1 or abs(yValue[index] - a) < abs(yValue[firstMax] - a):
+            #             firstMax = index
+
+            # print("Vs:" + str(Constance.vs))
+            # print("minValue" + str(minValue))
+            # print("maxvalue" + str(maxValue))
+            # print("index0: " + str(firstGreaterThan0) +' '+ str(xValue[firstGreaterThan0]))
+            # print("indexMax: " + str(firstMax) +' '+ str(xValue[firstMax]))    
+
+            # result = str(round(abs(xValue[firstMax] - xValue[firstGreaterThan0]), 2))
+                
+            # self.ax.text(0.05, 0.95, '\u03C4: ' + result +' s\n' + 'Uo: ' + str(Constance.vs) + ' V', transform=self.ax.transAxes, fontsize=14, verticalalignment='top') 
+            
+            if self.whichLesson == 2:
+                self.line2, = self.ax.plot(xValue, yValue[1], 'r-', picker=False, pickradius=10, label='Ur')
+                self.line, = self.ax.plot(xValue, yValue[0], 'b-', picker=True, pickradius=10, label='Uc')
+            else:
+                self.line, = self.ax.plot(xValue, yValue, 'b-', picker=True, pickradius=10, label='Uc')
+            self.fig.legend()
         else:
             if self.optionMeasure == 4:
-                self.ax.set_xticks(np.arange(min(yValue), max(yValue)+0.5, 0.1))
-                self.ax.set_yticks(np.arange(min(xValue), max(xValue)+0.5, 0.1))
+                # self.ax.set_xticks(np.arange(min(yValue), max(yValue)+0.5, 0.1))
+                # self.ax.set_yticks(np.arange(min(xValue), max(xValue)+0.5, 0.1))
+                self.ax.set_xticks(np.arange(min(yValue), max(yValue)+0.5, abs(max(yValue)-min(yValue)) / 5))
+                self.ax.set_yticks(np.arange(min(xValue), max(xValue)+0.5, abs(max(xValue)-min(xValue)) / 5))
 
                 self.line, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
             else:
                 self.line, = self.ax.plot(yValue, xValue, picker=True, pickradius=10)
         self.ax.grid()
-        self.fig.show()
-
+    def replaceMax(self, y):
+        x = np.copy(y)
+        for i in range(0, len(x)):
+            if x[i] == 0:
+                x[i] = Constance.vs
+        return x
     def drawChart2(self):
         tmp, yOldValue = self.getXValueAndYValue()
         yOldValue = [y for y in yOldValue]
@@ -332,45 +390,77 @@ class FrameOffline:
         ax.set_xlabel('Thời gian (t)')
         ax.set_ylabel('I1 (A)')
         fig.show()
-                    
     def onpick(self, event):
-        if self.optionMeasure == 4:
-            if event.artist!=self.line: 
-                return True     
-            if not len(event.ind):  
-                return True
-            ind = event.ind[0]+1
-            Constance.ind.append(ind)
-            if len(Constance.ind) == 2:
-                self.drawBestStraightLine()
-                Constance.ind = []
-            return True
         if self.optionMeasure == 2:
-            if self.whichLesson == 1 and event.artist!=self.line1 and event.artist != self.line2: 
-                return True   
-            if self.whichLesson == 0 and event.artist!=self.line:
+            xValue, yValue = self.getXValueAndYValue()
+            if (Constance.whichLesson == 2 and event.artist!=self.line2) or (Constance.whichLesson == 1 and event.artist!=self.line): 
                 return True  
-            if not len(event.ind):  
+            Constance.ind.append(event.ind[0])
+            if len(Constance.ind) == 1:
+                self.chosingPoint = ChosingPoint()
+                if Constance.whichLesson == 1: 
+                    self.chosingPoint.setPoint1(yValue[Constance.ind[0]], xValue[Constance.ind[0]])
+                else: 
+                    self.chosingPoint.setPoint1(yValue[1][Constance.ind[0]], xValue[Constance.ind[0]])
+            elif len(Constance.ind) == 2:
+                if Constance.whichLesson == 1: 
+                    self.chosingPoint.setPoint2(yValue[Constance.ind[1]], xValue[Constance.ind[1]])
+                else: 
+                    self.chosingPoint.setPoint2(yValue[1][Constance.ind[1]], xValue[Constance.ind[1]])
+            else:
                 return True
-            ind = event.ind[0]
-            Constance.ind.append(ind)
-            print(Constance.ind)
-            if len(Constance.ind) >= 2:
-                xValue, yValue = self.getXValueAndYValue()
-                if self.whichLesson == 1:
-                    if event.artist==self.line1: 
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue[0], decimalPlace = Constance.decimalPlacesIP2)
-                    elif event.artist==self.line2:
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue[1], decimalPlace = Constance.decimalPlacesIP1)
-                else:
-                    if self.whichPort == 0:
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue, decimalPlace = Constance.decimalPlacesIP2)
-                    else:
-                        self.drawBestStraightLine(xValue=xValue, yValue=yValue, decimalPlace = Constance.decimalPlacesIP1)
-                
-                Constance.ind = []
-            return True
             
+    def onclick(self, event):
+        if self.optionMeasure == 2:
+            if event.button == 3 and len(Constance.ind) >= 2:
+                position = pyautogui.position()
+                contextMenu = Menu(master=self.drawTk, tearoff=0)
+                contextMenu.add_command(label="Fit function", command=self.showFitFunction)
+                contextMenu.tk_popup(position.x, position.y)
+                # print(pyautogui.position().)
+
+    def showFitFunction(self):
+        self.chosingPoint.destroy()
+
+        xValue, yValue = self.getXValueAndYValue()
+
+        newTopUp = ctk.CTkToplevel(fg_color='white')
+        newTopUp.title("VL01 LAB - Fit function")
+        if Constance.vs == None and Constance.whichLesson == 1:
+            Constance.vs = max(yValue)
+        label = ctk.CTkLabel(master=newTopUp, text=f'   A = {Constance.vs}V, B = {Constance.tau}s (A*exp(-x/B))   ',text_color='black', font=('Roboto Bold', 14))
+        label.pack()
+        newTopUp.focus()
+
+        drawTk = ctk.CTkToplevel()
+        drawTk.title("VL01 LAB - Visual")
+        fig1, ax1 = plt.subplots()
+        fig1.canvas = FigureCanvasTkAgg(fig1, master = drawTk)
+        fig1.canvas.get_tk_widget().pack()
+
+        if Constance.whichLesson == 2:
+            index, yy = self.remove0(yValue[1])
+            ax1.plot(xValue[index:], yy, 'b-', label='Ur', linewidth=3)
+            popt, _ = curve_fit(self.functionX, xValue[index:], yy)
+            a, b, c = popt
+            x_line = np.arange(min(xValue[index:]), max(xValue[index:]), 1)
+            y_line = self.functionX(x_line, a, b, c)
+        else:
+            index = min(Constance.ind)
+            xValue = xValue[index:]
+            yValue = yValue[index:]
+            ax1.plot(xValue, yValue, 'b-', label='Ur', linewidth=3)
+            popt, _ = curve_fit(self.functionX, xValue, yValue)
+            a, b, c = popt
+            x_line = np.arange(min(xValue), max(xValue), 1)
+            y_line = self.functionX(x_line, a, b, c)
+        ax1.set_ylim(-15, 15)
+        ax1.grid() 
+        ax1.plot(x_line, y_line, '--', color='red')
+        Constance.ind = []
+
+    def functionX(self, x, a, b, c):
+        return a * np.exp(-b * x) + c
     
     def drawBestStraightLine(self, xValue = None, yValue = None, decimalPlace = 3):
         Constance.ind.sort()
@@ -465,20 +555,21 @@ class FrameOffline:
                 yValue.append(value['voltage'])
                 xValue.append(value['centimeter'])
         elif self.optionMeasure == 2:
-            if self.whichLesson == 1:
-                yValue0 = []
-                yValue1 = []
-                for value in Constance.historyTVV:
-                    yValue0.append(value['voltage1'])
-                    yValue1.append(value['voltage2'])
-                    xValue.append(value['timepoint'])
-                yValue.append(yValue0)
-                yValue.append(yValue1)
-            else:
+            if Constance.whichLesson == 1:
                 for index in range(1, len(Constance.historyTV)):
                     value = Constance.historyTV[index]
                     yValue.append(value['voltage'])
                     xValue.append(value['timepoint'])
+            else:
+                yValue1 = []
+                yValue2 = []
+                for index in range(1, len(Constance.historyTV)):
+                    value = Constance.historyTV[index]
+                    yValue1.append(value['voltage1'])
+                    yValue2.append(value['voltage2'])
+                    xValue.append(value['timepoint'])
+                yValue.append(yValue1)
+                yValue.append(yValue2)
         elif self.optionMeasure == 3:
             for value in Constance.historyA2V1:
                 yValue.append(value['voltage1'])
@@ -512,7 +603,7 @@ class FrameOffline:
                 worksheet.write(0, 1, 'Hiệu điện thế (V)')
                 worksheet.write(0, 2, 'Khoảng cách (cm)')
             elif self.optionMeasure == 2:
-                if self.whichLesson == 1:
+                if self.whichLesson == 2:
                     worksheet.write(0, 0, 'STT')
                     worksheet.write(0, 1, 'Time (s)')
                     worksheet.write(0, 2, 'Uc (V)')
@@ -529,12 +620,18 @@ class FrameOffline:
                 worksheet.write(0, 0, 'STT')
                 worksheet.write(0, 1, Constance.symbolIP1+"("+Constance.unitIP1+")")
                 worksheet.write(0, 2, Constance.symbolIP2+"("+Constance.unitIP2+")")
-            if self.optionMeasure == 2 and self.whichLesson == 1:
-                for row in range (1, len(xValue)+1):
-                    worksheet.write(row, 0, row)
-                    worksheet.write(row, 1, xValue[row-1])
-                    worksheet.write(row, 2, yValue[0][row-1])
-                    worksheet.write(row, 3, Constance.vs - yValue[0][row-1])
+            if self.optionMeasure == 2:
+                if self.whichLesson == 2:
+                    for row in range (1, len(xValue)+1):
+                        worksheet.write(row, 0, row)
+                        worksheet.write(row, 1, xValue[row-1])
+                        worksheet.write(row, 2, yValue[0][row-1])
+                        worksheet.write(row, 3, yValue[1][row-1])
+                else:
+                    for row in range (1, len(xValue)+1):
+                        worksheet.write(row, 0, row)
+                        worksheet.write(row, 1, xValue[row-1])
+                        worksheet.write(row, 2, yValue[row-1])
 
             else:    
                 for row in range (1, len(xValue)+1):
@@ -573,29 +670,43 @@ class FrameOffline:
             self.btnDrawChart2.grid_forget()
             self.tableLogger["displaycolumns"] =[1,2,3]
 
-        elif option == "V-t":
+        elif option == "Nạp tụ":
             self.optionMeasure = 2
             self.detect.option = 2
             Constance.currentLession = 2
+            Constance.whichLesson = 2
+            self.whichLesson = 2
             self.entryValue.configure(placeholder_text="Giá trị thời gian lặp")
             self.btnDrawChart.configure(text='Vẽ')
             self.entryValue.grid_forget()
-            if self.whichLesson == 1:
-                self.tableLogger.heading(1, text='ID')
-                self.tableLogger.heading(2, text='Time (s)')
-                self.tableLogger.heading(3, text='Hiệu điện thế Uc (V)')
-                self.tableLogger["displaycolumns"] =[1,2,3,4]
-            else:
-                self.tableLogger.heading(1, text='ID')
-                self.tableLogger.heading(2, text='Time (s)')
-                self.tableLogger.heading(3, text='Hiệu điện thế (V)')
-                self.tableLogger["displaycolumns"] =[1,2,3]
+            self.tableLogger.heading(1, text='ID')
+            self.tableLogger.heading(2, text='Time (s)')
+            self.tableLogger.heading(3, text='Uc (V)')
+            self.tableLogger.heading(4, text='Ur (V)')
+            self.tableLogger["displaycolumns"] =[1,2,3,4]
 
             self.loadData()
             self.cbWhichPort.grid_forget()
             self.btnDrawChart2.grid_forget()
             # self.cbWhichLesson.grid(row=0, column=8, sticky='nsw')
+        elif option == "Phóng tụ":
+            self.optionMeasure = 2
+            self.detect.option = 2
+            Constance.currentLession = 2
+            Constance.whichLesson = 1
+            self.whichLesson = 1
+            self.entryValue.configure(placeholder_text="Giá trị thời gian lặp")
+            self.btnDrawChart.configure(text='Vẽ')
+            self.entryValue.grid_forget()
+            
+            self.tableLogger.heading(1, text='ID')
+            self.tableLogger.heading(2, text='Time (s)')
+            self.tableLogger.heading(3, text='Uc (V)')
+            self.tableLogger["displaycolumns"] =[1,2,3]
 
+            self.loadData()
+            self.cbWhichPort.grid_forget()
+            self.btnDrawChart2.grid_forget()
         elif option == 'I1-I2':
             self.optionMeasure = 3
             self.detect.option = 3
@@ -624,46 +735,48 @@ class FrameOffline:
             self.cbWhichLesson.grid_forget()
     
     def loadData(self):
+        self.clearData()
         self.clearTableData()
-        if self.optionMeasure == 0:
-            for i in range(0, len(Constance.historyAV)):
-                item = Constance.historyAV[i]
-                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
-        elif self.optionMeasure == 1:
-            for i in range(0, len(Constance.historyCV)):
-                item = Constance.historyCV[i]
-                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['centimeter'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
-        elif self.optionMeasure == 2:
-            if self.whichLesson == 1:
-                for i in range(0, len(Constance.historyTVV)):
-                    item = Constance.historyTVV[i]
-                    self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage1'],item['voltage2']), tags='odd' if (i+1)%2 else 'even')
-            else:
-                for i in range(0, len(Constance.historyTV)):
-                    item = Constance.historyTV[i]
-                    self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
-        elif self.optionMeasure == 3:
-            for i in range(0, len(Constance.historyI1I2)):
-                item = Constance.historyI1I2[i]
-                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe1'],item['ampe2']), tags='odd' if (i+1)%2 else 'even')
-        elif self.optionMeasure == 4:
-            print(Constance.historyI1I2)
-            for i in range(0, len(Constance.historyI1I2)):
-                item = Constance.historyI1I2[i]
-                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe1'],item['ampe2']), tags='odd' if (i+1)%2 else 'even')
+        # if self.optionMeasure == 0:
+        #     for i in range(0, len(Constance.historyAV)):
+        #         item = Constance.historyAV[i]
+        #         self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        # elif self.optionMeasure == 1:
+        #     for i in range(0, len(Constance.historyCV)):
+        #         item = Constance.historyCV[i]
+        #         self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['centimeter'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        # elif self.optionMeasure == 2:
+        #     if self.whichLesson == 1:
+        #         for i in range(0, len(Constance.historyTV)):
+        #             item = Constance.historyTV[i]
+        #             self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        #     else:
+        #         for i in range(0, len(Constance.historyTV)):
+        #             item = Constance.historyTV[i]
+        #             self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage'],Constance.vs-float(item['voltage'])), tags='odd' if (i+1)%2 else 'even')
+        # elif self.optionMeasure == 3:
+        #     for i in range(0, len(Constance.historyI1I2)):
+        #         item = Constance.historyI1I2[i]
+        #         self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe1'],item['ampe2']), tags='odd' if (i+1)%2 else 'even')
+        # elif self.optionMeasure == 4:
+        #     print(Constance.historyI1I2)
+        #     for i in range(0, len(Constance.historyI1I2)):
+        #         item = Constance.historyI1I2[i]
+        #         self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['ampe1'],item['ampe2']), tags='odd' if (i+1)%2 else 'even')
     
     def clearTableData(self):
         for item in self.tableLogger.get_children():
             self.tableLogger.delete(item)
 
     def clearData(self):
+        Constance.historyTV = []
+        Constance.vs = None
         if self.optionMeasure == 0:
             Constance.historyAV = []
         elif self.optionMeasure == 1:
             Constance.historyCV = []
         elif self.optionMeasure == 2:
             Constance.historyTV = []
-            Constance.historyTVV = []
         elif self.optionMeasure == 3:
             Constance.historyA2V1 = []
         else:
@@ -693,25 +806,26 @@ class FrameOffline:
         self.measure()
 
     def changeLesson(self, option):
-        if option == 'Phóng tụ':
-            self.whichLesson = 1
-            for item in self.tableLogger.get_children():
-                self.tableLogger.delete(item)
-            self.tableLogger.heading(3, text="Hiệu điện thế Uc (V)")
-            for i in range(0, len(Constance.historyTVV)):
-                item = Constance.historyTVV[i]
-                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage1'],item['voltage2']), tags='odd' if (i+1)%2 else 'even')
+        print("change")
+        # if option == 'Phóng tụ':
+        #     self.whichLesson = 1
+        #     for item in self.tableLogger.get_children():
+        #         self.tableLogger.delete(item)
+        #     self.tableLogger.heading(3, text="Hiệu điện thế Uc (V)")
+        #     for i in range(0, len(Constance.historyTVV)):
+        #         item = Constance.historyTVV[i]
+        #         self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage1'],item['voltage2']), tags='odd' if (i+1)%2 else 'even')
 
-            self.tableLogger["displaycolumns"] =[1,2,3,4]
-            self.cbWhichPort.grid_forget()
-        else:
-            self.whichLesson = 2
-            for item in self.tableLogger.get_children():
-                self.tableLogger.delete(item)
-            for i in range(0, len(Constance.historyTV)):
-                item = Constance.historyTV[i]
-                self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage']), tags='odd' if (i+1)%2 else 'even')
+        #     self.tableLogger["displaycolumns"] =[1,2,3,4]
+        #     self.cbWhichPort.grid_forget()
+        # else:
+        #     self.whichLesson = 2
+        #     for item in self.tableLogger.get_children():
+        #         self.tableLogger.delete(item)
+        #     for i in range(0, len(Constance.historyTV)):
+        #         item = Constance.historyTV[i]
+        #         self.tableLogger.insert("", 0, iid=i+1, values=(i+1,item['timepoint'],item['voltage'],Constance.vs-float(item['voltage'])), tags='odd' if (i+1)%2 else 'even')
 
-            self.tableLogger.heading(3, text="Hiệu điện thế (V)")
-            self.tableLogger["displaycolumns"] =[1,2,3]
-            self.cbWhichPort.grid(row=2, column=2, sticky='nsew')
+        #     self.tableLogger.heading(3, text="Hiệu điện thế (V)")
+        #     self.tableLogger["displaycolumns"] =[1,2,3]
+        #     self.cbWhichPort.grid(row=2, column=2, sticky='nsew')

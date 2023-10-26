@@ -110,94 +110,94 @@ class Constance:
         # }
     ]
     historyI1I2 = [
-        {
-            'ampe2': 1.06,
-            'ampe1': 0,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 1.6,
-            'ampe1': 0.16,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 1.01,
-            'ampe1': 0.16,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.97,
-            'ampe1': 0.28,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.56,
-            'ampe1': 0.30,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.83,
-            'ampe1': 0.37,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.74,
-            'ampe1': 0.49,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.65,
-            'ampe1': 0.58,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.53,
-            'ampe1': 0.73,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.42,
-            'ampe1': 0.82,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.33,
-            'ampe1': 1,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.18,
-            'ampe1': 1.16,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0.09,
-            'ampe1': 1.3,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0,
-            'ampe1': 1.52,
-            'time': '11:11:11'
-        },
-        {
-            'ampe2': 0,
-            'ampe1': 1.7,
-            'time': '11:11:11'
-        }
+        # {
+        #     'ampe2': 1.06,
+        #     'ampe1': 0,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 1.6,
+        #     'ampe1': 0.16,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 1.01,
+        #     'ampe1': 0.16,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.97,
+        #     'ampe1': 0.28,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.56,
+        #     'ampe1': 0.30,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.83,
+        #     'ampe1': 0.37,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.74,
+        #     'ampe1': 0.49,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.65,
+        #     'ampe1': 0.58,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.53,
+        #     'ampe1': 0.73,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.42,
+        #     'ampe1': 0.82,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.33,
+        #     'ampe1': 1,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.18,
+        #     'ampe1': 1.16,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0.09,
+        #     'ampe1': 1.3,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0,
+        #     'ampe1': 1.52,
+        #     'time': '11:11:11'
+        # },
+        # {
+        #     'ampe2': 0,
+        #     'ampe1': 1.7,
+        #     'time': '11:11:11'
+        # }
     ]
     root = None
     isManualRecord = True
-    intervalTime = 0.03
+    intervalTime = 1
     
-    formulaIP1 = "IP1/1.0"
+    formulaIP1 = "IP1/1.482"
     symbolIP1 = "I1"
     fromValueIP1 = 0
     toValueIP1 = 30
     unitIP1 = ""
     decimalPlacesIP1 = 2
 
-    formulaIP2 = "IP2/1.0"
+    formulaIP2 = "IP2/1.482"
     symbolIP2 = "I2"
     fromValueIP2 = 0
     toValueIP2 = 30
@@ -205,11 +205,20 @@ class Constance:
     decimalPlacesIP2 = 2
 
     ind = []
-    timeMeasure = 8
+    timeMeasure = 2
 
     vs = 6.3
     deltaV = 0
     currentLession = 2
 
-    tl1Un = 0.63
-    tl2Un = 0.37
+    tl1Un = 0.64
+    tl2Un = 0.3
+
+    whichLesson = 2
+    A = 0
+    B = 0
+    C = 0
+    tau = 0
+
+    currentX = 0
+    currentY = 0

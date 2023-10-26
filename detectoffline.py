@@ -2,7 +2,6 @@ import serial
 import serial.tools.list_ports
 from datetime import datetime
 from constance import Constance
-import re
 
 class DetectOffline:
     def __init__(self, option):
@@ -14,7 +13,7 @@ class DetectOffline:
         self.SERIAL_PORT = serial.Serial(serialPortName, 9600, timeout=0.05)
         if self.first_time == True:
             self.first_time = False
-            self.add_data(distance=None, timer=0)
+            self.add_data(distance=None, timer=0, firstTime=self.first_time)
             
 
     def get_coms(self):
@@ -24,20 +23,49 @@ class DetectOffline:
         for i in ports:
             result.append(str(i).split()[0])
         if len(result) == 0: result = ['No COM detected']
-        return result[::-1]
+        return result
     
-    def add_data(self, distance, timer, port=None, Rvalue=None):
+    def add_data(self, distance, timer, port=None, Rvalue=None, firstTime = False):
         now = datetime.now()
         data = bytes("x", 'utf-8')
         self.SERIAL_PORT.write(data)
         res = self.SERIAL_PORT.readline()
         if len(res) == 0:
-            self.SERIAL_PORT.write(data)
-            res = self.SERIAL_PORT.readline()
+            self.add_data(distance=0, timer=timer)
+            return
         res = res.decode("utf-8").replace("\r\n","")
         res = res.split(",")
-        if port != None:
-            res = res[port]
+        
+        if Constance.whichLesson == 2:
+            R2value = float(Constance.formulaIP2[4:])
+            operator2 = Constance.formulaIP2[3:4]
+            if Constance.vs == None:
+                Constance.vs = 0
+            if operator2 == '/':
+                Constance.vs = max(Constance.vs, round(float(res[1])/R2value, int(Constance.decimalPlacesIP2)))
+            elif operator2 == '*':
+                Constance.vs = max(Constance.vs, round(float(res[1])*R2value, int(Constance.decimalPlacesIP2)))
+            elif operator2 == '+':
+                Constance.vs = max(Constance.vs, round(float(res[1])+R2value, int(Constance.decimalPlacesIP2)))
+            elif operator2 == '-':
+                Constance.vs = max(Constance.vs, round(float(res[1])-R2value, int(Constance.decimalPlacesIP2)))
+
+            # Constance.vs = 6.3
+        # if Constance.currentLession == 1 and Constance.vs == None:
+        #     R1value = float(Constance.formulaIP1[4:])
+        #     operator1 = Constance.formulaIP1[3:4]
+
+        #     if operator1 == '/':
+        #         Constance.vs = round(float(res[0])/R1value, int(Constance.decimalPlacesIP1))
+        #     elif operator1 == '*':
+        #         Constance.vs = round(float(res[0])*R1value, int(Constance.decimalPlacesIP1))
+        #     elif operator1 == '+':
+        #         Constance.vs = round(float(res[0])+R1value, int(Constance.decimalPlacesIP1))
+        #     elif operator1 == '-':
+        #         Constance.vs = round(float(res[0])-R1value, int(Constance.decimalPlacesIP1))
+        res = res[0]
+        # if port != None:
+        #     res = res[port]
         
         if distance != None and res != None:
             if self.option == 0:
@@ -55,15 +83,15 @@ class DetectOffline:
                 }
                 Constance.historyCV.append(msg_dict)
             elif self.option == 2 and distance != -1:
-                if port == None:
-                    msg_dict = {
-                        'timepoint': timer,
-                        'voltage1': float(res[0]),
-                        'voltage2': float(res[1]),
-                        'time': now.strftime("%H:%M:%S")
-                    }
-                    Constance.historyTVV.append(msg_dict)
-                else:
+                # if port == None:
+                #     msg_dict = {
+                #         'timepoint': timer,
+                #         'voltage1': float(res[0]),
+                #         'voltage2': float(res[1]),
+                #         'time': now.strftime("%H:%M:%S")
+                #     }
+                #     Constance.historyTVV.append(msg_dict)
+                # else:
                     R1value = float(Constance.formulaIP1[4:])
                     operator1 = Constance.formulaIP1[3:4]
 
@@ -79,11 +107,20 @@ class DetectOffline:
                         voltage = round(float(res)-R1value, int(Constance.decimalPlacesIP1))
                     
                     if voltage != None:
-                        msg_dict = {
-                            'timepoint': timer,
-                            'voltage': float(voltage),
-                            'time': now.strftime("%H:%M:%S")
-                        }
+                        msg_dict = {}
+                        if Constance.whichLesson == 1:
+                            msg_dict = {
+                                'timepoint': timer,
+                                'voltage': float(voltage),
+                                'time': now.strftime("%H:%M:%S")
+                            }
+                        else:
+                            msg_dict = {
+                                'timepoint': timer,
+                                'voltage1': float(voltage),
+                                'voltage2': max(0, round(float(Constance.vs - voltage),2)),
+                                'time': now.strftime("%H:%M:%S")
+                            }
                         Constance.historyTV.append(msg_dict)
             elif self.option == 3:
                 msg_dict = {
